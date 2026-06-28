@@ -9,7 +9,7 @@ from users.models import User
 from users.schemas import UserCreate, UserResponse
 
 
-async def create_user(user_in: UserCreate, db: AsyncSession) -> UserResponse:
+async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
     """
     ╨б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╨╜╨╛╨▓╨╛╨│╨╛ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П.
 
