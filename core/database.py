@@ -1,12 +1,15 @@
-import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
-from dotenv import load_dotenv
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Column, Integer
+from core.config import settings
 
-load_dotenv()
+
+# класс служит основой (регистрацией) для всех ваших ORM-моделей
+class Base(DeclarativeBase):
+    id = Column(Integer, primary_key=True, index=True)
 
 # ╨з╨╕╤В╨░╨╡╨╝ URL ╨▒╨░╨╖╤Л ╨┤╨░╨╜╨╜╤Л╤Е ╨╕╨╖ ╨┐╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╤Е ╨╛╨║╤А╤Г╨╢╨╡╨╜╨╕╤П
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASE_URL = settings.db_url
 
 # ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╨░╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╜╤Л╨╣ ╨┤╨▓╨╕╨╢╨╛╨║
 engine = create_async_engine(
@@ -22,9 +25,6 @@ async_session_maker = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False
 )
-
-# ╨С╨░╨╖╨╛╨▓╤Л╨╣ ╨║╨╗╨░╤Б╤Б ╨┤╨╗╤П ╨╝╨╛╨┤╨╡╨╗╨╡╨╣
-Base = declarative_base()
 
 # ╨Ч╨░╨▓╨╕╤Б╨╕╨╝╨╛╤Б╤В╤М ╨┤╨╗╤П ╨┐╨╛╨╗╤Г╤З╨╡╨╜╨╕╤П ╤Б╨╡╤Б╤Б╨╕╨╕ ╨▓ ╤Н╨╜╨┤╨┐╨╛╨╕╨╜╤В╨░╤Е FastAPI
 async def get_db() -> AsyncSession:

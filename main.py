@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
-from database import engine, get_db, Base
-from fastapi import FastAPI, Response, Depends, HTTPException, Body, Path
+from core.database import engine, Base
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from users.views import router as user_router
-from logging_system import logger
+from core.logging_system import logger
+
 
 # ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╤В╨░╨▒╨╗╨╕╤Ж╤Л ╨┐╤А╨╕ ╨╖╨░╨┐╤Г╤Б╨║╨╡ ╨┐╤А╨╕╨╗╨╛╨╢╨╡╨╜╨╕╤П
 @asynccontextmanager

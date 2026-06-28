@@ -1,9 +1,8 @@
-from sqlalchemy.sql import crud, select
-from fastapi import Depends, HTTPException
+from sqlalchemy.sql import select
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from logging_system import logger
-from database import get_db
+from core.logging_system import logger
 from users.authentication_system import hash_password
 from users.models import User
 from users.schemas import UserCreate, UserResponse

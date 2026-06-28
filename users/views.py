@@ -2,7 +2,7 @@ import traceback
 from typing import List, Annotated
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_db
+from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
@@ -10,7 +10,7 @@ from users.schemas import UserCreate, UserResponse
 from fastapi import Depends, Path, APIRouter, HTTPException
 from users.models import User
 from pydantic import EmailStr
-from logging_system import logger
+from core.logging_system import logger
 from users import crud
 import pytz
 
