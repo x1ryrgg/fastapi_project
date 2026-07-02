@@ -7,12 +7,11 @@ from sqlalchemy import select
 from starlette import status
 
 from users.schemas import UserCreate, UserResponse
-from fastapi import Depends, Path, APIRouter, HTTPException
+from fastapi import Depends, Path, APIRouter, HTTPException, UploadFile
 from users.models import User
 from pydantic import EmailStr
 from core.logging_system import logger
 from users import crud
-import pytz
 
 # uvicorn main:app --reload
 
@@ -26,29 +25,22 @@ async def get_users(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User))
     users = result.scalars().all()
     if not users:
-        logger.info(f"╨Э╨╡╤В ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╡╨╣.")
-    logger.info(f"╨Я╨╛╨╗╤Г╤З╨╕╨╗╨╕ {len(users)} ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╡╨╣")
+        logger.info(f"Нет пользователей.")
+    logger.info(f"Ответ по {len(users)} пользователям")
 
     return users
 
 @router.get("/{id}/", response_model=UserResponse)
 async def get_user(id: Annotated[int, Path(ge=1, le=1_000_000)], db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.id == id))
-    user = result.scalar_one_or_none()
-
-    if not user:
+    try:
+        return await crud.get_user(user_id=id, db=db)
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail=f"User not found: {e}"
         )
 
-    msk_time = pytz.timezone("Europe/Moscow")
-    user.created_at = user.created_at.astimezone(msk_time)
-
-    return user
-
-
-# ╨Я╤А╨╕╨╝╨╡╤А ╤Н╨╜╨┤╨┐╨╛╨╕╨╜╤В╨░ ╨┤╨╗╤П ╤Б╨╛╨╖╨┤╨░╨╜╨╕╤П ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П ╤З╨╡╤А╨╡╨╖ url
+# Пример post запроса с передачей данных через url
 @router.post("/{username}/{email}/{password}/", response_model=UserResponse)
 async def create_user(username: str, email: EmailStr, password: str, db: AsyncSession = Depends(get_db)):
     new_user = User(username=username, email=email, password=password)

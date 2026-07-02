@@ -1,3 +1,5 @@
+import pytz
+
 from sqlalchemy.sql import select
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,14 +12,22 @@ from users.schemas import UserCreate, UserResponse
 
 async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
     """
-    ╨б╨╛╨╖╨┤╨░╨╜╨╕╨╡ ╨╜╨╛╨▓╨╛╨│╨╛ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П.
+    Создаёт нового пользователя в базе данных.
+
+    Выполняет проверку на уникальность username и email, хеширует пароль,
+    сохраняет пользователя и возвращает созданный объект.
 
     Args:
-        user_in: ╨Ф╨░╨╜╨╜╤Л╨╡ ╨┤╨╗╤П ╤Б╨╛╨╖╨┤╨░╨╜╨╕╤П ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П
-        db: ╨б╨╡╤Б╤Б╨╕╤П ╨▒╨░╨╖╤Л ╨┤╨░╨╜╨╜╤Л╤Е
+        user_in (UserCreate): Pydantic-схема с данными для создания пользователя
+                              (username, email, password).
+        db (AsyncSession): Асинхронная сессия SQLAlchemy.
 
     Returns:
-        UserResponse: ╨б╨╛╨╖╨┤╨░╨╜╨╜╤Л╨╣ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤М
+        User: Созданный объект модели User (с заполненными полями id и created_at).
+
+    Raises:
+        HTTPException: Если пользователь с таким username или email уже существует,
+                       возвращает статус 400 (Bad Request).
     """
     result = await db.execute(
         select(User).where(
@@ -46,4 +56,28 @@ async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
 
     logger.info(f"[create_user] User created: id={user.id}, username={user.username}")
 
+    return user
+
+
+async def get_user(user_id: int, db: AsyncSession) -> User | None:
+    """
+    Выдача пользователя по его id
+
+    :param user_id: int
+    :param db: AsyncSession
+    :return: User or None
+    """
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    msk_time = pytz.timezone("Europe/Moscow")
+    user.created_at = user.created_at.astimezone(msk_time)
+
+    logger.info(f"[get_user] Return User #{user.id} with name: {user.username}")
     return user
