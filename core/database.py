@@ -3,12 +3,10 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import Column, Integer
 from core.config import settings
 
-
 # класс служит основой (регистрацией) для всех ваших ORM-моделей
 class Base(DeclarativeBase):
     id = Column(Integer, primary_key=True, index=True)
 
-# ╨з╨╕╤В╨░╨╡╨╝ URL ╨▒╨░╨╖╤Л ╨┤╨░╨╜╨╜╤Л╤Е ╨╕╨╖ ╨┐╨╡╤А╨╡╨╝╨╡╨╜╨╜╤Л╤Е ╨╛╨║╤А╤Г╨╢╨╡╨╜╨╕╤П
 DATABASE_URL = settings.db_url
 
 # ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╨░╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╜╤Л╨╣ ╨┤╨▓╨╕╨╢╨╛╨║
