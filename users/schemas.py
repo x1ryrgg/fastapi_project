@@ -1,7 +1,7 @@
 import re
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional
 from annotated_types import MaxLen, MinLen
 from pydantic import BaseModel, Field, EmailStr, field_validator
 
@@ -28,6 +28,12 @@ class UserCreate(BaseModel):
         # if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
         #     raise ValueError('[validate_password] пароль должен иметь хотя бы один специальный знак')
         return v
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = Annotated[str, MaxLen(50)]
+    email: Optional[EmailStr] = None
+    password: Optional[str] = Annotated[str, MinLen(8)]
 
 
 class UserResponse(BaseModel):

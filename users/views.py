@@ -6,21 +6,20 @@ from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
-from users.schemas import UserCreate, UserResponse
-from fastapi import Depends, Path, APIRouter, HTTPException, UploadFile
-from users.models import User
+from users.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate
+from fastapi import Depends, Path, APIRouter, HTTPException
+from core.models.user import User
 from pydantic import EmailStr
 from core.logging_system import logger
 from users import crud
 
-# uvicorn main:app --reload
 
 router = APIRouter(
     prefix="/users",  # ╨Ю╨▒╤Й╨╕╨╣ ╨┐╤А╨╡╤Д╨╕╨║╤Б ╨┤╨╗╤П ╨▓╤Б╨╡╤Е ╤Н╨╜╨┤╨┐╨╛╨╕╨╜╤В╨╛╨▓ ╨▓ ╤Н╤В╨╛╨╝ ╤А╨╛╤Г╤В╨╡╤А╨╡
     tags=["users"]    # ╨в╨╡╨│ ╨┤╨╗╤П ╨┤╨╛╨║╤Г╨╝╨╡╨╜╤В╨░╤Ж╨╕╨╕
 )
 
-@router.get("/all/", response_model=List[UserResponse])
+@router.get("/all/", response_model=List[UsersResponse])
 async def get_users(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User))
     users = result.scalars().all()
@@ -49,28 +48,6 @@ async def create_user(username: str, email: EmailStr, password: str, db: AsyncSe
     await db.refresh(new_user)
     return new_user
 
-# ╨Я╤А╨╕╨╝╨╡╤А Post ╨╖╨░╨┐╤А╨╛╤Б╨░ ╤Б Pydantic ╨╕ ╤З╨╡╤А╨╡╨╖ ╤В╨╡╨╗╨╛ ╨╖╨░╨┐╤А╨╛╤Б╨░
-# @router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-# async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
-#     result = await db.execute(
-#         select(User).where(
-#             (User.email == user.email) |
-#             (User.username == user.username)
-#         )
-#     )
-#     existing_user = result.scalar_one_or_none()
-#
-#     if existing_user:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="Username or email already registered"
-#         )
-#
-#     new_user = User(username=user.username, email=user.email, password=user.password)
-#     db.add(new_user)
-#     await db.commit()
-#     await db.refresh(new_user)
-#     return new_user
 
 @router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
@@ -84,4 +61,38 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create user: {e}: {traceback.format_exc()}",
+        )
+
+
+@router.delete("/delete/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        return await crud.delete_user(user_id=user_id, db=db)
+    except HTTPException:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user: {e}: {traceback.format_exc()}",
+        )
+
+
+@router.patch("/update/", response_model=UserResponse, status_code=status.HTTP_200_OK)
+async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
+    """
+        Частичное обновление пользователя.
+        Обновляются только переданные поля.
+    """
+    try:
+        return await crud.update_user(user_id=user_id, user_in=user_update, db=db)
+    except HTTPException:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to patch user: {e}: {traceback.format_exc()}",
         )

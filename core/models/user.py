@@ -1,6 +1,12 @@
+import uuid
+from random import choices
+
 from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint
 from sqlalchemy.sql import func
-from core.database import Base
+from sqlalchemy.sql.schema import ForeignKey
+from sqlalchemy.sql.sqltypes import Float
+
+from core.models.base import Base
 
 
 class User(Base):
@@ -14,3 +20,11 @@ class User(Base):
     __table_args__ = (
         CheckConstraint("LENGTH(username) <= 50", name="username_max_length"),
     )
+
+    UNIQUE_FIELDS = ["username", "email"]
+
+
+
+
+
+

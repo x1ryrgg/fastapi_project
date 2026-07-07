@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from core.logging_system import logger
 from users.authentication_system import hash_password
-from users.models import User
-from users.schemas import UserCreate, UserResponse
+from core.models.user import User
+from users.schemas import UserCreate, UserUpdate
 
 
 async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
@@ -80,4 +80,56 @@ async def get_user(user_id: int, db: AsyncSession) -> User | None:
     user.created_at = user.created_at.astimezone(msk_time)
 
     logger.info(f"[get_user] Return User #{user.id} with name: {user.username}")
+    return user
+
+
+async def delete_user(user_id: int, db: AsyncSession) -> bool:
+    """
+    Удаление пользователя
+    """
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    logger.info(f"User #{user.id} delete success")
+    await db.delete(user)
+    await db.commit()
+    return True
+
+
+async def update_user(user_id: int, user_in: UserUpdate, db: AsyncSession) -> User:
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    user_data = user_in.model_dump(exclude_unset=True)
+
+    for field in User.UNIQUE_FIELDS:
+        if field in user_data:
+            existing = await db.execute(
+                select(User).where(
+                    getattr(User, field) == user_data[field],
+                    User.id != user_id
+                )
+            )
+            if existing.scalar_one_or_none():
+                raise HTTPException(400, f"{field.capitalize()} already taken")
+
+    for field, value in user_data.items():
+        if field == "password":
+            value = hash_password(value)
+        setattr(user, field, value)
+
+    await db.commit()
+    await db.refresh(user)
     return user
