@@ -36,7 +36,11 @@ class UserUpdate(BaseModel):
     password: Optional[str] = Annotated[str, MinLen(8)]
 
 
-class UserResponse(BaseModel):
+class UserBase(BaseModel):
+    id: int
+
+
+class UserResponse(UserBase):
     username: str
     email: EmailStr
     password: str
@@ -46,8 +50,7 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-class UsersResponse(BaseModel):
-    id: int
+class UsersResponse(UserBase):
     username: str
     email: EmailStr
     created_at: datetime

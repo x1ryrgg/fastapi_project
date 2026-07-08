@@ -1,3 +1,5 @@
+from typing import Any, Coroutine
+
 import pytz
 
 from sqlalchemy.sql import select
@@ -5,9 +7,10 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from core.logging_system import logger
+from core.models import User
 from users.authentication_system import hash_password
 from core.models.user import User
-from users.schemas import UserCreate, UserUpdate
+from users.schemas import UserCreate, UserUpdate, UserBase
 
 
 async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
@@ -45,11 +48,9 @@ async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
     user_data = user_in.model_dump()
     logger.info(f"[create_user] Creating user: username={user_data['username']}, email={user_data['email']}")
 
-    password = hash_password(user_data['password'])
+    password = hash_password(user_data.pop('password'))
 
-    user = User(username=user_data['username'],
-                email=user_data['email'],
-                password=password)
+    user = User(**user_data, password=password)
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -59,7 +60,7 @@ async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
     return user
 
 
-async def get_user(user_id: int, db: AsyncSession) -> User | None:
+async def get_user(user_id: int, db: AsyncSession) -> type[User]:
     """
     Выдача пользователя по его id
 
@@ -67,8 +68,7 @@ async def get_user(user_id: int, db: AsyncSession) -> User | None:
     :param db: AsyncSession
     :return: User or None
     """
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user = await db.get(User, user_id)
 
     if not user:
         raise HTTPException(
@@ -87,8 +87,7 @@ async def delete_user(user_id: int, db: AsyncSession) -> bool:
     """
     Удаление пользователя
     """
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user = await db.get(User, user_id)
 
     if not user:
         raise HTTPException(
@@ -96,9 +95,9 @@ async def delete_user(user_id: int, db: AsyncSession) -> bool:
             detail="User not found"
         )
 
-    logger.info(f"User #{user.id} delete success")
     await db.delete(user)
     await db.commit()
+    logger.info(f"[delete_user] User #{user.id} deleted")
     return True
 
 
@@ -112,7 +111,7 @@ async def update_user(user_id: int, user_in: UserUpdate, db: AsyncSession) -> Us
             detail="User not found"
         )
 
-    user_data = user_in.model_dump(exclude_unset=True)
+    user_data = user_in.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
 
     for field in User.UNIQUE_FIELDS:
         if field in user_data:

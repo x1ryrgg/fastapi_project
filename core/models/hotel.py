@@ -2,7 +2,7 @@ from enum import Enum
 import uuid
 from random import choices
 
-from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import ForeignKey
@@ -44,7 +44,7 @@ class Room(Base):
 
     hotel_id = Column(Integer, ForeignKey('hotels.id', ondelete='CASCADE'), nullable=False)
     info_id = Column(Integer, ForeignKey('room_information.id', ondelete='SET NULL'), nullable=True)
-    type = Column(Enum(RoomType), nullable=False, default=RoomType.SINGLE)
+    type = Column(SQLEnum(RoomType), nullable=False, default=RoomType.SINGLE)
     floor = Column(Integer, nullable=False)
     number = Column(Integer, nullable=False)
 

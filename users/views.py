@@ -6,8 +6,10 @@ from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
-from users.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate
+from users.dependencies import get_user_by_id
+from users.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate, UserBase
 from fastapi import Depends, Path, APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from core.models.user import User
 from pydantic import EmailStr
 from core.logging_system import logger
@@ -21,7 +23,9 @@ router = APIRouter(
 
 @router.get("/all/", response_model=List[UsersResponse])
 async def get_users(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User))
+    result = await db.execute(
+        select(User).order_by(User.created_at.desc())
+    )
     users = result.scalars().all()
     if not users:
         logger.info(f"Нет пользователей.")
@@ -29,15 +33,9 @@ async def get_users(db: AsyncSession = Depends(get_db)):
 
     return users
 
-@router.get("/{id}/", response_model=UserResponse)
-async def get_user(id: Annotated[int, Path(ge=1, le=1_000_000)], db: AsyncSession = Depends(get_db)):
-    try:
-        return await crud.get_user(user_id=id, db=db)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User not found: {e}"
-        )
+@router.get("/{user_id}/", response_model=UserResponse)
+async def get_user(user: User = Depends(get_user_by_id)):
+    return user
 
 # Пример post запроса с передачей данных через url
 @router.post("/{username}/{email}/{password}/", response_model=UserResponse)
@@ -64,14 +62,11 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         )
 
 
-@router.delete("/delete/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}/delete/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        return await crud.delete_user(user_id=user_id, db=db)
-    except HTTPException:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-        )
+        await crud.delete_user(user_id=user_id, db=db)
+        return JSONResponse(content="User successfully deleted.")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -79,11 +74,11 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
         )
 
 
-@router.patch("/update/", response_model=UserResponse, status_code=status.HTTP_200_OK)
+@router.patch("/{user_id}/update/", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
     """
-        Частичное обновление пользователя.
-        Обновляются только переданные поля.
+    Частичное обновление пользователя.
+    Обновляются только переданные поля.
     """
     try:
         return await crud.update_user(user_id=user_id, user_in=user_update, db=db)

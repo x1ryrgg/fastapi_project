@@ -34,15 +34,8 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/json/ping/")
-async def json_ping():
+@app.get("/ping/")
+async def ping():
     return JSONResponse(content={"response": "PONG"})
 
 
-@app.get("/car/")
-async def get_car_from_query(mark: str = None):
-    if mark:
-        mark = mark.strip("_").upper()
-        return {"Car mark": mark}
-    else:
-        return {"No mark provided"}
