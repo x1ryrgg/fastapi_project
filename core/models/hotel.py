@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 import uuid
 from random import choices
@@ -7,6 +8,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import Float, Text
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from typing import List, Optional
 
 from core.models.base import Base
 
@@ -14,72 +17,104 @@ from core.models.base import Base
 class Hotel(Base):
     __tablename__ = 'hotels'
 
-    name = Column(String(300), nullable=False, index=True)
-    city = Column(String(300), nullable=False, index=True)
-    address = Column(String(300), nullable=False)
-    region = Column(String(300), nullable=False)
-    description = Column(Text, nullable=True, default="Нет описания.")
-    stars = Column(Integer, nullable=False, default=0)
-    phone = Column(String(20), nullable=True)
-    email = Column(String(300), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
+    city: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
+    address: Mapped[str] = mapped_column(String(300), nullable=False)
+    region: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="Нет описания.")
+    stars: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    __table_args__ = (
-        CheckConstraint("stars <= 5", name="start_max_count"),
+    owner_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=True
     )
 
-    rooms = relationship('Room',
-                         uselist=True,
-                         back_populates='hotel',
-                         cascade='all, delete-orphan')
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи
+    rooms: Mapped[List["Room"]] = relationship(
+        "Room",
+        back_populates="hotel",
+        cascade="all, delete-orphan"
+    )
+    owner: Mapped[Optional["User"]] = relationship(
+        "User",
+        back_populates="hotels",
+        uselist=False
+    )
+
+    __table_args__ = (
+        CheckConstraint("stars <= 5", name="stars_max_count"),
+    )
+
 
 class RoomType(Enum):
-    SINGLE = "single"        # одноместный
-    DOUBLE = "double"        # двухместный
-    TWIN = "twin"            # с двумя отдельными кроватями
-    SUITE = "suite"          # люкс
-    FAMILY = "family"        # семейный
-    APARTMENT = "apartment"  # апартаменты
+    SINGLE = "single"
+    DOUBLE = "double"
+    TWIN = "twin"
+    SUITE = "suite"
+    FAMILY = "family"
+    APARTMENT = "apartment"
 
 
 class Room(Base):
     __tablename__ = 'rooms'
 
-    hotel_id = Column(Integer, ForeignKey('hotels.id', ondelete='CASCADE'), nullable=False)
-    info_id = Column(Integer, ForeignKey('room_information.id', ondelete='SET NULL'), nullable=True)
-    type = Column(SQLEnum(RoomType), nullable=False, default=RoomType.SINGLE)
-    floor = Column(Integer, nullable=False)
-    number = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    hotel_id: Mapped[int] = mapped_column(
+        ForeignKey('hotels.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    info_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey('room_information.id', ondelete='SET NULL'),
+        nullable=True
+    )
+    type: Mapped[RoomType] = mapped_column(
+        SQLEnum(RoomType),
+        nullable=False,
+        default=RoomType.SINGLE
+    )
+    floor: Mapped[int] = mapped_column(Integer, nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now())
 
-    hotel = relationship("Hotel",
-                         uselist=False,
-                         back_populates="rooms")
-
-    room_information = relationship("RoomInformation",
-                                    uselist=False,
-                                    back_populates="room")
+    # Связи
+    hotel: Mapped["Hotel"] = relationship(
+        "Hotel",
+        back_populates="rooms",
+        uselist=False
+    )
+    room_information: Mapped[Optional["RoomInformation"]] = relationship(
+        "RoomInformation",
+        back_populates="room",
+        uselist=False
+    )
 
 
 class RoomInformation(Base):
     __tablename__ = 'room_information'
 
-    price_per_night = Column(Float, nullable=False)
-    capacity = Column(Integer, nullable=False, default=1)
-    size = Column(Float, nullable=False, default=15)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    price_per_night: Mapped[float] = mapped_column(Float, nullable=False)
+    capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    size: Mapped[float] = mapped_column(Float, nullable=False, default=15)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связь
+    room: Mapped[List["Room"]] = relationship(
+        "Room",
+        back_populates="room_information"
+    )
 
     __table_args__ = (
         CheckConstraint("size >= 12", name="size_min_length"),
-        CheckConstraint("capacity > 0", name="capacity_more_than_one")
+        CheckConstraint("capacity > 0", name="capacity_positive"),
     )
-
-    room = relationship("Room",
-                        uselist=True,
-                        back_populates="room_information")

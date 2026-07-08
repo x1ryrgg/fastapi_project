@@ -1,6 +1,7 @@
 from typing import Any, Coroutine
 
 import pytz
+from sqlalchemy.engine.result import Result
 
 from sqlalchemy.sql import select
 from fastapi import HTTPException
@@ -11,6 +12,7 @@ from core.models import User
 from users.authentication_system import hash_password
 from core.models.user import User
 from users.schemas import UserCreate, UserUpdate, UserBase
+from core.models.hotel import Hotel
 
 
 async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
@@ -132,3 +134,5 @@ async def update_user(user_id: int, user_in: UserUpdate, db: AsyncSession) -> Us
     await db.commit()
     await db.refresh(user)
     return user
+
+
