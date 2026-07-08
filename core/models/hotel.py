@@ -19,11 +19,16 @@ class Hotel(Base):
     address = Column(String(300), nullable=False)
     region = Column(String(300), nullable=False)
     description = Column(Text, nullable=True, default="Нет описания.")
+    stars = Column(Integer, nullable=False, default=0)
     phone = Column(String(20), nullable=True)
     email = Column(String(300), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint("stars <= 5", name="start_max_count"),
+    )
 
     rooms = relationship('Room',
                          uselist=True,

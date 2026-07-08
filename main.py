@@ -12,17 +12,10 @@ from core.logging_system import logger
 # taskkill /PID 7348 /F - завершение активных процессов
 
 
-# ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╤В╨░╨▒╨╗╨╕╤Ж╤Л ╨┐╤А╨╕ ╨╖╨░╨┐╤Г╤Б╨║╨╡ ╨┐╤А╨╕╨╗╨╛╨╢╨╡╨╜╨╕╤П
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("ЁЯЪА Starting application...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        logger.info("Database tables created/verified")
     yield
-    logger.info("Shutting down application...")
-    await engine.dispose()
-    logger.info("Database connections closed")
 
 app = FastAPI(lifespan=lifespan, title='TEST FASTAPI')
 
