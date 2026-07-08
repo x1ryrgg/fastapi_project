@@ -11,11 +11,16 @@ from sqlalchemy.sql.sqltypes import Float, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List, Optional
 
+from core.models import User
+from core.mixins import UserRelationMixin
 from core.models.base import Base
 
 
-class Hotel(Base):
+class Hotel(UserRelationMixin, Base):
     __tablename__ = 'hotels'
+
+    _user_nullable = True
+    _user_back_populates = "hotels"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(300), nullable=False, index=True)
@@ -27,11 +32,6 @@ class Hotel(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
 
-    owner_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=True
-    )
-
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now())
 
@@ -40,11 +40,6 @@ class Hotel(Base):
         "Room",
         back_populates="hotel",
         cascade="all, delete-orphan"
-    )
-    owner: Mapped[Optional["User"]] = relationship(
-        "User",
-        back_populates="hotels",
-        uselist=False
     )
 
     __table_args__ = (
