@@ -3,9 +3,11 @@ __all__= (
     "User",
     "Hotel",
     "Room",
-    "RoomInformation"
+    "RoomInformation",
+    "Reservation"
 )
 
 from .base import Base
 from .hotel import Hotel, Room, RoomInformation
 from .user import User
+from .reservation import Reservation

@@ -12,20 +12,20 @@ from core.models import Hotel
 from core.models.base import Base
 
 
+
 class User(Base):
     __tablename__ = "users"
 
-    username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(
+        String(50), unique=True, index=True, nullable=False
+    )
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
-    hotels: Mapped[list["Hotel"]] = relationship('Hotel', back_populates='owner')
+    # Связи
+    hotels: Mapped[list["Hotel"]] = relationship("Hotel", back_populates="owner")
 
     UNIQUE_FIELDS = ["username", "email"]
-
-
-
-
-
-

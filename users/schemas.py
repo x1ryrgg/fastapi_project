@@ -17,7 +17,7 @@ class UserCreate(BaseModel):
     def validate_password(cls, v: str) -> str:
         # Проверка на длину
         if len(v) < 8:
-            raise ValueError('[validate_password] пароль должен быть длинее 8 символов')
+            raise ValueError('[validate_password] пароль должен быть минимум в 8 символов.')
         # Проверка на буквенные знаки
         # if not re.search(r'[A-Z]', v):
         #     raise ValueError('[validate_password] пароль должен иметь хотя бы одну английскую буку')
