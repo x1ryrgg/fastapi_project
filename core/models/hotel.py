@@ -101,7 +101,7 @@ class Room(Base):
         "RoomInformation", back_populates="room", uselist=False
     )
     reservations: Mapped[List["Reservation"]] = relationship(
-        "Reservation", back_populates="room", cascade="all, delete-orphan"
+        "Reservation", uselist=True, back_populates="room", cascade="all, delete-orphan"
     )
 
 
@@ -120,7 +120,7 @@ class RoomInformation(Base):
     )
 
     # Связи
-    room: Mapped[List["Room"]] = relationship("Room", back_populates="room_information")
+    room: Mapped[List["Room"]] = relationship("Room", uselist=True, back_populates="room_information")
 
     __table_args__ = (
         CheckConstraint("size >= 12", name="size_min_length"),

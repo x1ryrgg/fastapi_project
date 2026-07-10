@@ -1,15 +1,18 @@
 import uuid
 from datetime import datetime
 from random import choices
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import Float
-
-from core.models import Hotel
 from core.models.base import Base
+
+if TYPE_CHECKING:
+    from .hotel import Hotel
+    from .reservation import Reservation
 
 
 
@@ -26,6 +29,13 @@ class User(Base):
     )
 
     # Связи
-    hotels: Mapped[list["Hotel"]] = relationship("Hotel", back_populates="owner")
+    hotels: Mapped[list["Hotel"]] = relationship("Hotel", uselist=True, back_populates="user")
+    reservations: Mapped[list["Reservation"]] = relationship("Reservation", uselist=True, back_populates="user")
 
     UNIQUE_FIELDS = ["username", "email"]
+
+    def __str__(self):
+        return f"[{self.__class__.__name__} table] - {self.username} | {self.email}"
+
+    def __repr__(self):
+        return self
