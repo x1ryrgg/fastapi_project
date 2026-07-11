@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from .reservation import Reservation
 
 
-
 class User(Base):
     __tablename__ = "users"
 
@@ -29,7 +28,13 @@ class User(Base):
     )
 
     # Связи
-    hotels: Mapped[list["Hotel"]] = relationship("Hotel", uselist=True, back_populates="user")
+    hotels: Mapped[list["Hotel"]] = relationship(
+        "Hotel", secondary="users_hotels", back_populates="users", lazy="dynamic"
+    )
+    hotels_link: Mapped[list["UserHotel"]] = relationship(
+        "UserHotel", back_populates="user", cascade="all, delete-orphan"
+    )
+
     reservations: Mapped[list["Reservation"]] = relationship("Reservation", uselist=True, back_populates="user")
 
     UNIQUE_FIELDS = ["username", "email"]

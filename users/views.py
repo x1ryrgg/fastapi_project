@@ -34,8 +34,20 @@ async def get_users(db: AsyncSession = Depends(get_db)):
     return users
 
 @router.get("/{user_id}/", response_model=UserResponse)
-async def get_user(user: User = Depends(get_user_by_id)):
+async def view_get_user(user: User = Depends(get_user_by_id)):
     return user
+
+
+@router.get("/by_username/{username}/", response_model=UsersResponse)
+async def view_get_user_by_username(username: str, db: AsyncSession = Depends(get_db)):
+    try:
+        return await crud.get_user_by_username(username=username, db=db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user: {e}: {traceback.format_exc()}",
+        )
+
 
 # Пример post запроса с передачей данных через url
 @router.post("/{username}/{email}/{password}/", response_model=UserResponse)

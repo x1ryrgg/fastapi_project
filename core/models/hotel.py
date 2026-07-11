@@ -18,7 +18,23 @@ if TYPE_CHECKING:
     from .reservation import Reservation
 
 
-class Hotel(UserRelationMixin, Base):
+class UserHotel(Base):
+    """
+    Many to Many таблицы между User и Hotel. На данный момент идея,
+    что у отеля можеть быть несколько владельцев (пользователей), а у пользователя может быть несколько отелей
+    """
+    __tablename__ = "users_hotels"
+
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    hotel_id: Mapped[int] = mapped_column(Integer, ForeignKey("hotels.id"), nullable=False)
+    # Связи
+    user: Mapped["User"] = relationship("User", back_populates="hotels_link")
+    hotel: Mapped["Hotel"] = relationship("Hotel", back_populates="users_link")
+
+
+
+
+class Hotel(Base):
     __tablename__ = "hotels"
 
     _user_nullable = True
@@ -49,10 +65,18 @@ class Hotel(UserRelationMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now()
+        DateTime(timezone=True), onupdate=func.now(), nullable=True,
     )
 
     # Связи
+    users: Mapped[List["User"]] = relationship(
+        "User", secondary="users_hotels", back_populates="hotel", lazy="dynamic"
+    )
+
+    users_link: Mapped[list["UserHotel"]] = relationship(
+        "UserHotel", back_populates="hotel", cascade="all, delete-orphan"
+    )
+
     rooms: Mapped[List["Room"]] = relationship(
         "Room", back_populates="hotel", cascade="all, delete-orphan"
     )

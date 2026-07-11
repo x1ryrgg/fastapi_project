@@ -49,4 +49,3 @@ dist/
 *.egg-info/
 .eggs
 
-.scripts
