@@ -6,19 +6,19 @@ from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
-from users.dependencies import get_user_by_id
-from users.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate, UserBase
+from users_logic.dependencies import get_user_by_id
+from users_logic.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate, UserBase
 from fastapi import Depends, Path, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from core.models.user import User
 from pydantic import EmailStr
 from core.logging_system import logger
-from users import crud
+from users_logic import crud
 
 
 router = APIRouter(
-    prefix="/users",  # ╨Ю╨▒╤Й╨╕╨╣ ╨┐╤А╨╡╤Д╨╕╨║╤Б ╨┤╨╗╤П ╨▓╤Б╨╡╤Е ╤Н╨╜╨┤╨┐╨╛╨╕╨╜╤В╨╛╨▓ ╨▓ ╤Н╤В╨╛╨╝ ╤А╨╛╤Г╤В╨╡╤А╨╡
-    tags=["users"]    # ╨в╨╡╨│ ╨┤╨╗╤П ╨┤╨╛╨║╤Г╨╝╨╡╨╜╤В╨░╤Ж╨╕╨╕
+    prefix="/users",
+    tags=["users"]
 )
 
 @router.get("/all/", response_model=List[UsersResponse])

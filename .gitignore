@@ -49,3 +49,4 @@ dist/
 *.egg-info/
 .eggs
 
+scripts.py

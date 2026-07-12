@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from typing import Annotated, Optional
 from annotated_types import MaxLen, MinLen
-from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 
 
 class UserCreate(BaseModel):
@@ -37,6 +37,8 @@ class UserUpdate(BaseModel):
 
 
 class UserBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
 
 
@@ -46,14 +48,9 @@ class UserResponse(UserBase):
     password: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class UsersResponse(UserBase):
     username: str
     email: EmailStr
     created_at: datetime
 
-    class Config:
-        from_attributes = True

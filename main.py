@@ -3,7 +3,9 @@ from core.database import engine
 from core.models.base import Base
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from users.views import router as user_router
+from users_logic.views import router as user_router
+from users_logic.auth_views import router as auth_router
+from hotel_logic.views import router as hotel_router
 from core.logging_system import logger
 
 
@@ -20,6 +22,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan, title='TEST FASTAPI')
 
 app.include_router(user_router)
+app.include_router(hotel_router)
+app.include_router(auth_router)
 
 
 @app.get("/")

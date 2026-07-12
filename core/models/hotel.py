@@ -70,7 +70,7 @@ class Hotel(Base):
 
     # Связи
     users: Mapped[List["User"]] = relationship(
-        "User", secondary="users_hotels", back_populates="hotel", lazy="dynamic"
+        "User", secondary="users_hotels", back_populates="hotels", lazy="selectin"
     )
 
     users_link: Mapped[list["UserHotel"]] = relationship(

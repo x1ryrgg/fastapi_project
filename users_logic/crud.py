@@ -9,9 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from core.logging_system import logger
 from core.models import User
-from users.authentication_system import hash_password
+from users_logic.authentication_system import hash_password
 from core.models.user import User
-from users.schemas import UserCreate, UserUpdate, UserBase
+from users_logic.schemas import UserCreate, UserUpdate, UserBase
 from core.models.hotel import Hotel
 
 
@@ -109,6 +109,10 @@ async def get_user_by_username(username: str, db: AsyncSession) -> type[User]:
 async def delete_user(user_id: int, db: AsyncSession) -> bool:
     """
     Удаление пользователя
+
+    :param user_id: int
+    :param db: AsyncSession
+    :return: True
     """
     user = await db.get(User, user_id)
 
