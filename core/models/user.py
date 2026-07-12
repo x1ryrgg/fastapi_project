@@ -29,7 +29,7 @@ class User(Base):
 
     # Связи
     hotels: Mapped[list["Hotel"]] = relationship(
-        "Hotel", secondary="users_hotels", back_populates="users", lazy="selectin"
+        "Hotel", secondary="users_hotels", back_populates="users", lazy="selectin", viewonly=True
     )
     hotels_link: Mapped[list["UserHotel"]] = relationship(
         "UserHotel", back_populates="user", cascade="all, delete-orphan"

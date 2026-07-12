@@ -60,7 +60,7 @@ async def create_user(username: str, email: EmailStr, password: str, db: AsyncSe
 
 
 @router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     try:
         return await crud.create_user(user_in=user, db=db)
     except HTTPException:
