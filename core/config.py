@@ -26,5 +26,23 @@ class Settings(BaseSettings):
         env_file = ".env"
         extra = "ignore"
 
-
 settings = Settings()
+
+
+class SecuritySettings(BaseSettings):
+    # JWT
+    SECRET_KEY: str  # python -c "import secrets; print(secrets.token_hex(32))"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60      # Короткий срок
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7         # Долгий срок для обновления
+
+    # База данных
+    DATABASE_URL: str
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = True
+        extra = "ignore"
+
+security_settings = SecuritySettings()

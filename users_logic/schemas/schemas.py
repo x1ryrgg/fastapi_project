@@ -10,7 +10,6 @@ class UserCreate(BaseModel):
     username: str = Annotated[str, MaxLen(50)]
     email: EmailStr
     password: str
-    created_at: datetime
 
     @field_validator('password')
     @classmethod
@@ -30,6 +29,11 @@ class UserCreate(BaseModel):
         return v
 
 
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
 class UserUpdate(BaseModel):
     username: Optional[str] = Annotated[str, MaxLen(50)]
     email: Optional[EmailStr] = None
@@ -38,14 +42,14 @@ class UserUpdate(BaseModel):
 
 class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
 
 
 class UserResponse(UserBase):
     username: str
     email: EmailStr
-    password: str
+    is_active: bool
+    is_superuser: bool
     created_at: datetime
 
 

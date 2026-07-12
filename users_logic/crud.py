@@ -1,18 +1,13 @@
-from typing import Any, Coroutine
-
 import pytz
-from sqlalchemy.engine.result import Result
 
 from sqlalchemy.sql import select
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from core.logging_system import logger
-from core.models import User
-from users_logic.authentication_system import hash_password
+from users_logic.security import hash_password
 from core.models.user import User
-from users_logic.schemas import UserCreate, UserUpdate, UserBase
-from core.models.hotel import Hotel
+from users_logic.schemas.schemas import UserCreate, UserUpdate
 
 
 async def create_user(user_in: UserCreate, db: AsyncSession) -> User:
