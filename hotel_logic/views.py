@@ -24,7 +24,7 @@ router = APIRouter(
 )
 
 
-@router.post("/create/hotel/", response_model=HotelResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/create/", response_model=HotelResponse, status_code=status.HTTP_201_CREATED)
 async def create_hotel(hotel_in: HotelCreate, db: AsyncSession = Depends(get_db)):
     try:
         return await crud.create_hotel(db=db, hotel_in=hotel_in)

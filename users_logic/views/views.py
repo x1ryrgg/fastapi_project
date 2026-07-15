@@ -6,7 +6,7 @@ from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
-from users_logic.dependencies import get_user_by_id
+from users_logic.dependencies import get_user_by_id, get_current_user
 from users_logic.schemas.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -33,8 +33,9 @@ async def get_users(db: AsyncSession = Depends(get_db)):
 
     return users
 
-@router.get("/{user_id}/", response_model=UserResponse)
-async def view_get_user(user: User = Depends(get_user_by_id)):
+
+@router.get("/profile/", response_model=UserResponse)
+async def user_info_view(user: User = Depends(get_current_user)):
     return user
 
 
@@ -49,14 +50,9 @@ async def view_get_user_by_username(username: str, db: AsyncSession = Depends(ge
         )
 
 
-# Пример post запроса с передачей данных через url
-@router.post("/{username}/{email}/{password}/", response_model=UserResponse)
-async def create_user(username: str, email: EmailStr, password: str, db: AsyncSession = Depends(get_db)):
-    new_user = User(username=username, email=email, password=password)
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
-    return new_user
+@router.get("/{user_id}/", response_model=UserResponse)
+async def view_get_user(user: User = Depends(get_user_by_id)):
+    return user
 
 
 @router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
