@@ -6,7 +6,11 @@ from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
-from users_logic.dependencies import get_user_by_id, get_current_user
+from users_logic.dependencies import (
+    get_user_by_id,
+    get_current_user,
+    get_current_active_superuser,
+)
 from users_logic.schemas.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -22,32 +26,13 @@ router = APIRouter(
 )
 
 @router.get("/all/", response_model=List[UsersResponse])
-async def get_users(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(User).order_by(User.created_at.desc())
-    )
-    users = result.scalars().all()
-    if not users:
-        logger.info(f"Нет пользователей.")
-    logger.info(f"Ответ по {len(users)} пользователям")
-
-    return users
+async def get_users(_=Depends(get_current_active_superuser), db: AsyncSession = Depends(get_db)):
+    return await crud.get_all_users(db=db)
 
 
 @router.get("/profile/", response_model=UserResponse)
 async def user_info_view(user: User = Depends(get_current_user)):
     return user
-
-
-@router.get("/by_username/{username}/", response_model=UsersResponse)
-async def view_get_user_by_username(username: str, db: AsyncSession = Depends(get_db)):
-    try:
-        return await crud.get_user_by_username(username=username, db=db)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete user: {e}: {traceback.format_exc()}",
-        )
 
 
 @router.get("/{user_id}/", response_model=UserResponse)

@@ -1,3 +1,5 @@
+from typing import List
+
 import pytz
 
 from sqlalchemy.sql import select
@@ -154,3 +156,15 @@ async def update_user(user_id: int, user_in: UserUpdate, db: AsyncSession) -> Us
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def get_all_users(db: AsyncSession) -> List[User]:
+    result = await db.execute(
+            select(User).order_by(User.is_superuser.desc())
+        )
+    users = result.scalars().all()
+    if not users:
+        logger.info(f"[get_all_users] Нет пользователей.")
+
+    logger.info(f"[get_all_users] Ответ по {len(users)} пользователям")
+    return users

@@ -9,6 +9,8 @@ from sqlalchemy import select
 from starlette import status
 from core.database import get_db
 from core.models import User
+from users_logic.crud import get_user_by_username
+from users_logic.dependencies import authenticate_user, refresh_token_verification
 from users_logic.schemas.token_schemas import TokenResponse, RefreshTokenRequest
 from users_logic.security import (
     verify_password,
@@ -24,37 +26,12 @@ router = APIRouter(prefix="/authentication", tags=["authentication"])
 
 @router.post("/register/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
-    try:
-        return await crud.create_user(user_in=user, db=db)
-    except HTTPException:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create user: {e}: {traceback.format_exc()}",
-        )
+    return await crud.create_user(user_in=user, db=db)
 
 
 @router.post("/login/", response_model=TokenResponse)
-async def login_user(
-    login_data: UserLogin,
-    db: AsyncSession = Depends(get_db),
-):
+async def login_user_view(user: User = Depends(authenticate_user)):
     """Вход — возвращает access и refresh токены."""
-    # Поиск пользователя
-    result = await db.execute(select(User).where(User.username == login_data.username))
-    user = result.scalar_one_or_none()
-
-    # Проверка
-    if not user or not verify_password(login_data.password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
-        )
-
-    # Создаем оба токена
     access_token = create_access_token(data={"sub": user.username, "user_id": user.id})
     refresh_token = create_refresh_token(
         data={"sub": user.username, "user_id": user.id}
@@ -68,31 +45,9 @@ async def login_user(
 
 
 @router.post("/refresh/", response_model=TokenResponse)
-async def refresh_access_token(
-    refresh_data: RefreshTokenRequest,
-    db: AsyncSession = Depends(get_db),
-):
+async def refresh_access_token(user: User = Depends(refresh_token_verification)):
     """Обновление access токена через refresh токен."""
-    # 1. Декодируем refresh токен
-    payload = decode_token(refresh_data.refresh_token)
 
-    # 2. Проверяем тип
-    if payload.get("type") != "refresh":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
-        )
-
-    # 3. Проверяем пользователя
-    user_id = payload.get("user_id")
-    user = await db.get(User, user_id)
-    if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive",
-        )
-
-    # 4. Создаем новые токены
     access_token = create_access_token(data={"sub": user.username, "user_id": user.id})
     refresh_token = create_refresh_token(
         data={"sub": user.username, "user_id": user.id}
