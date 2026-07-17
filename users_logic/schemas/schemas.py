@@ -35,9 +35,9 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    username: Optional[str] = Annotated[str, MaxLen(50)]
+    username: Optional[Annotated[str, Field(max_length=50)]] = None
     email: Optional[EmailStr] = None
-    password: Optional[str] = Annotated[str, MinLen(8)]
+    password: Optional[Annotated[str, Field(min_length=8)]] = None
 
 
 class UserBase(BaseModel):
@@ -57,4 +57,3 @@ class UsersResponse(UserBase):
     username: str
     email: EmailStr
     created_at: datetime
-

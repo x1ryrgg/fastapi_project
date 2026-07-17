@@ -42,45 +42,19 @@ async def view_get_user(user: User = Depends(get_user_by_id)):
 
 @router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
-    try:
-        return await crud.create_user(user_in=user, db=db)
-    except HTTPException:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create user: {e}: {traceback.format_exc()}",
-        )
+    return await crud.create_user(user_in=user, db=db)
 
 
 @router.delete("/{user_id}/delete/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    try:
-        await crud.delete_user(user_id=user_id, db=db)
-        return JSONResponse(content="User successfully deleted.")
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete user: {e}: {traceback.format_exc()}",
-        )
+    await crud.delete_user(user_id=user_id, db=db)
 
 
 @router.patch("/{user_id}/update/", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
+async def patch_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
     """
     Частичное обновление пользователя.
     Обновляются только переданные поля.
     """
-    try:
-        return await crud.update_user(user_id=user_id, user_in=user_update, db=db)
-    except HTTPException:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to patch user: {e}: {traceback.format_exc()}",
-        )
+    return await crud.update_user(user_id=user_id, user_in=user_update, db=db)
+

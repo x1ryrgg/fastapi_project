@@ -96,7 +96,6 @@ async def authenticate_user(
 
     return user
 
-
 async def refresh_token_verification(
     refresh_data: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db),
