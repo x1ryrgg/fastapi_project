@@ -10,6 +10,16 @@ from core.logging_system import logger
 from fastapi import Depends, HTTPException, status
 
 
+async def get_room_information_by_id(room_info_id: int, db: AsyncSession) -> RoomInformation:
+    """ Возврат RoomInformation по id """
+    room_info = await db.get(RoomInformation, room_info_id)
+    if not room_info:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="RoomInformation not found"
+        )
+
+    return room_info
+
 async def create_room_information(room_information_in: RoomInformationCreate, db: AsyncSession) -> RoomInformation:
     """ Создание RoomInformation """
     room_information_data = room_information_in.model_dump(exclude_unset=True)
@@ -38,3 +48,28 @@ async def get_hotel_information(room_info_id: int, db: AsyncSession) -> RoomInfo
         )
 
     return room_info
+
+
+async def update_room_information(room_info_id: int, room_info_in: RoomInformationUpdate, db: AsyncSession):
+    """ Частичное обновление RoomInformation """
+    room_info = await get_room_information_by_id(room_info_id, db=db)
+
+    room_info_data = room_info_in.model_dump(exclude_unset=True)
+
+    for field, value in room_info_data.items():
+        setattr(room_info, field, value)
+
+    await db.commit()
+    await db.refresh(room_info)
+    return room_info
+
+
+async def delete_update_room_information(room_info_id: int, db: AsyncSession) -> bool:
+    room_info = await get_room_information_by_id(room_info_id, db=db)
+
+    room_info_id = room_info.id # для лога
+
+    await db.delete(room_info)
+    await db.commit()
+    logger.info(f"[delete_update_room_information] Hotel #{room_info_id} successfully deleted. ")
+    return True

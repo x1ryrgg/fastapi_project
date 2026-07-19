@@ -71,3 +71,17 @@ async def get_all_room_information(db: AsyncSession = Depends(get_db), _=Depends
 async def get_all_room_information(room_info_id: int, db: AsyncSession = Depends(get_db)):
     """ """
     return await room_crud.get_hotel_information(room_info_id=room_info_id, db=db)
+
+
+@router.patch("/rooms/imformation/{room_info_id}/update/", response_model=RoomInformationResponse, status_code=status.HTTP_200_OK)
+async def patch_room_information(room_info_id: int, room_info_in: RoomInformationUpdate,
+                                 db: AsyncSession = Depends(get_db), _=Depends(RoleChecker(UserRole.HOTEL_MANAGER))):
+    """ """
+    return await room_crud.update_room_information(room_info_id=room_info_id, room_info_in=room_info_in, db=db)
+
+
+@router.delete("/rooms/imformation/{room_info_id}/delete/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_hotel(room_info_id: int,
+                       db: AsyncSession = Depends(get_db), _=Depends(RoleChecker(UserRole.HOTEL_MANAGER))):
+    """ """
+    return await room_crud.delete_update_room_information(room_info_id=room_info_id, db=db)

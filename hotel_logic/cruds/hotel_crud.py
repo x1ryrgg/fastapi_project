@@ -10,6 +10,16 @@ from core.logging_system import logger
 from fastapi import Depends, HTTPException, status
 
 
+async def get_hotel_by_id(hotel_id: int, db: AsyncSession) -> Hotel:
+    hotel = await db.get(Hotel, hotel_id)
+    if not hotel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found"
+        )
+
+    return hotel
+
+
 async def create_hotel(hotel_in: HotelCreate, db: AsyncSession) -> Hotel:
     """ """
     hotel_info = hotel_in.model_dump()
@@ -27,17 +37,6 @@ async def get_all_hotels(db: AsyncSession) -> List[Hotel]:
     hotels = result.scalars().all()
 
     return hotels
-
-
-
-async def get_hotel_by_id(hotel_id: int, db: AsyncSession) -> Hotel:
-    hotel = await db.get(Hotel, hotel_id)
-    if not hotel:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found"
-        )
-
-    return hotel
 
 
 async def delete_hotel(hotel_id: int, db: AsyncSession) -> bool:

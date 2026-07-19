@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -58,7 +58,7 @@ async def get_current_user(
 
 class RoleChecker:
     """ Ограничение доступа по role пользователя User. """
-    def __init__(self, allowed_roles: List[UserRole] = None):
+    def __init__(self, allowed_roles: Union[UserRole, List[UserRole]] = None):
         if allowed_roles is None:
             self.allowed_roles = list(UserRole)
         elif allowed_roles == UserRole.HOTEL_MANAGER:
@@ -66,7 +66,7 @@ class RoleChecker:
         else:
             self.allowed_roles = allowed_roles
 
-    def __call__(self, current_user: User = Depends(get_current_user)) -> User:
+    def __call__(self, current_user: User = Depends(get_current_user)) -> None:
         if current_user.role not in self.allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

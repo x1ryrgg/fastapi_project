@@ -82,4 +82,4 @@ async def check_code_decode_system():
 
 
 if __name__ == "__main__":
-    asyncio.run(check_code_decode_system())
+    asyncio.run(create_users())
