@@ -30,9 +30,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    role: Mapped[UserRole] = mapped_column(
-        SQLEnum(UserRole, name="userrole", values_callable=lambda x: [e.value for e in x]),
-        nullable=False, default=UserRole.CUSTOMER)
+    role: Mapped[UserRole] = mapped_column(String(20), nullable=False, default=UserRole.CUSTOMER)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

@@ -133,10 +133,7 @@ class RoomInformation(Base):
     price_per_night: Mapped[float] = mapped_column(Float, comment="Цена за сутки", nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, comment="Вместимость клиентов", nullable=False, default=1)
     size: Mapped[float] = mapped_column(Float, comment="Размер в м^2", nullable=False, default=15)
-    type: Mapped[RoomType] = mapped_column(
-        SQLEnum(RoomType, values_callable=lambda x: [e.value for e in x]),
-        comment="Тип номера", nullable=False, default=RoomType.SINGLE
-    )
+    type: Mapped[RoomType] = mapped_column(String(20),comment="Тип номера", nullable=False, default=RoomType.SINGLE)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

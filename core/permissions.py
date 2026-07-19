@@ -56,10 +56,15 @@ async def get_current_user(
 
     return user
 
-class RoleChecker:  # Подумать!!!
+class RoleChecker:
     """ Ограничение доступа по role пользователя User. """
-    def __init__(self, allowed_roles: List[UserRole]):
-        self.allowed_roles = allowed_roles
+    def __init__(self, allowed_roles: List[UserRole] = None):
+        if allowed_roles is None:
+            self.allowed_roles = list(UserRole)
+        elif allowed_roles == UserRole.HOTEL_MANAGER:
+            self.allowed_roles = [UserRole.HOTEL_MANAGER, UserRole.ADMIN]
+        else:
+            self.allowed_roles = allowed_roles
 
     def __call__(self, current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in self.allowed_roles:

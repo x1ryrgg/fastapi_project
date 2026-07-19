@@ -11,28 +11,23 @@ from fastapi import Depends, HTTPException, status
 
 
 async def create_hotel(hotel_in: HotelCreate, db: AsyncSession) -> Hotel:
-    try:
-        hotel_info = hotel_in.model_dump()
+    """ """
+    hotel_info = hotel_in.model_dump()
+    hotel = Hotel(**hotel_info)
 
-        hotel = Hotel(**hotel_info)
-        db.add(hotel)
-        await db.commit()
-    except Exception as e:
-        logger.error(f"[create_hotel] Exception: {e} | {traceback.format_exc()}")
-        return None
+    db.add(hotel)
+    await db.commit()
+    await db.refresh(hotel)
 
     return hotel
 
 
 async def get_all_hotels(db: AsyncSession) -> List[Hotel]:
-    try:
-        result: Result = await db.execute(select(Hotel).order_by(Hotel.id))
-        hotels = result.scalars().all()
+    result: Result = await db.execute(select(Hotel).order_by(Hotel.id))
+    hotels = result.scalars().all()
 
-        return hotels
-    except Exception as e:
-        logger.error(f"[get_all_hotels] Exception: {e} | {traceback.format_exc()}")
-        return None
+    return hotels
+
 
 
 async def get_hotel_by_id(hotel_id: int, db: AsyncSession) -> Hotel:
