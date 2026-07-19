@@ -5,6 +5,8 @@ from typing import Annotated, Optional
 from annotated_types import MaxLen, MinLen
 from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 
+from core.models.hotel import RoomType
+
 
 class HotelCreate(BaseModel):
     name: str = Annotated[str, MaxLen(300)]
@@ -15,6 +17,8 @@ class HotelCreate(BaseModel):
     stars: int = Annotated[int, MaxLen(5)]
     phone: Optional[str]
     email: Optional[str]
+    created_at: datetime
+    updated_at: datetime
 
 
 class HotelUpdate(BaseModel):
@@ -35,7 +39,33 @@ class HotelResponse(BaseModel):
     city: str
     address: str
     region: str
-    description: Optional[str]
+    description: str
     stars: int
-    phone: Optional[str]
-    email: Optional[str]
+    phone: str
+    email: str
+
+
+class RoomInformationCreate(BaseModel):
+    price_per_night: float
+    capacity: Optional[Annotated[int, Field(ge=1)]] = None
+    size: Optional[Annotated[float, Field(ge=15)]] = None
+    type: Optional[RoomType] = None
+
+
+class RoomInformationUpdate(BaseModel):
+    price_per_night: Optional[float] = None
+    capacity: Optional[Annotated[int, Field(ge=1)]] = None
+    size: Optional[Annotated[float, Field(ge=15)]] = None
+    type: Optional[RoomType] = None
+
+
+class RoomInformationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    price_per_night: float
+    capacity: int
+    size: float
+    type: RoomType
+    created_at: datetime
+    updated_at: datetime

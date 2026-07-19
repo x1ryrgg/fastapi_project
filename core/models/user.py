@@ -3,17 +3,23 @@ from datetime import datetime
 from random import choices
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint, Enum as SQLEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import Float, Boolean
 from core.models.base import Base
+from enum import Enum
 
 if TYPE_CHECKING:
     from .hotel import Hotel
     from .reservation import Reservation
 
+
+class UserRole(str, Enum):
+    CUSTOMER = "customer"  # Обычный клиент (бронирует)
+    HOTEL_MANAGER = "manager"  # Сотрудник отеля (управляет комнатами)
+    ADMIN = "admin" # поддержка платформы и имеет возможность ко всем функциям
 
 class User(Base):
     __tablename__ = "users"
@@ -24,7 +30,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole, name="userrole", values_callable=lambda x: [e.value for e in x]),
+        nullable=False, default=UserRole.CUSTOMER)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

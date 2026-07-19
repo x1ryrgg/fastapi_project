@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi import Request, status, HTTPException
 
 from core.logging_system import logger
-from users_logic.views.views import router as user_router
+from users_logic.views.user_views import router as user_router
 from users_logic.views.auth_views import router as auth_router
 from hotel_logic.views import router as hotel_router
 

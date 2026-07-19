@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 
 class UserHotel(Base):
     """
-    Many to Many таблицы между User и Hotel. На данный момент идея,
-    что у отеля можеть быть несколько владельцев (пользователей), а у пользователя может быть несколько отелей
+    Many to Many таблицы между User и Hotel.
+    У отеля можеть быть несколько владельцев (пользователей), а у пользователя может быть несколько отелей.
     """
     __tablename__ = "users_hotels"
 
@@ -30,8 +30,6 @@ class UserHotel(Base):
     # Связи
     user: Mapped["User"] = relationship("User", back_populates="hotels_link")
     hotel: Mapped["Hotel"] = relationship("Hotel", back_populates="users_link")
-
-
 
 
 class Hotel(Base):
@@ -65,7 +63,7 @@ class Hotel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), nullable=True,
+        DateTime(timezone=True), onupdate=func.now(), server_default=func.now()
     )
 
     # Связи
@@ -84,15 +82,6 @@ class Hotel(Base):
     __table_args__ = (CheckConstraint("stars <= 5", name="stars_max_count"),)
 
 
-class RoomType(Enum):
-    SINGLE = "single"
-    DOUBLE = "double"
-    TWIN = "twin"
-    SUITE = "suite"
-    FAMILY = "family"
-    APARTMENT = "apartment"
-
-
 class Room(Base):
     __tablename__ = "rooms"
 
@@ -102,19 +91,18 @@ class Room(Base):
         nullable=False,
     )
     info_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("room_information.id", ondelete="SET NULL"), nullable=True
+        ForeignKey("room_information.id", ondelete="SET NULL"),
+        comment="Внешний ключ к информации о номере",
+        nullable=True,
     )
-    type: Mapped[RoomType] = mapped_column(
-        SQLEnum(RoomType), nullable=False, default=RoomType.SINGLE
-    )
-    floor: Mapped[int] = mapped_column(Integer, nullable=False)
-    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    floor: Mapped[int] = mapped_column(Integer, comment="Этаж", nullable=False)
+    number: Mapped[int] = mapped_column(Integer, comment="Порядковое значение номера", nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now()
+        DateTime(timezone=True), onupdate=func.now(), server_default=func.now()
     )
 
     # Связи
@@ -129,18 +117,32 @@ class Room(Base):
     )
 
 
+class RoomType(str, Enum):
+    """ Тип номера. """
+    SINGLE = "single"
+    DOUBLE = "double"
+    TWIN = "twin"
+    SUITE = "suite"
+    FAMILY = "family"
+    APARTMENT = "apartment"
+
+
 class RoomInformation(Base):
     __tablename__ = "room_information"
 
-    price_per_night: Mapped[float] = mapped_column(Float, nullable=False)
-    capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    size: Mapped[float] = mapped_column(Float, nullable=False, default=15)
+    price_per_night: Mapped[float] = mapped_column(Float, comment="Цена за сутки", nullable=False)
+    capacity: Mapped[int] = mapped_column(Integer, comment="Вместимость клиентов", nullable=False, default=1)
+    size: Mapped[float] = mapped_column(Float, comment="Размер в м^2", nullable=False, default=15)
+    type: Mapped[RoomType] = mapped_column(
+        SQLEnum(RoomType, values_callable=lambda x: [e.value for e in x]),
+        comment="Тип номера", nullable=False, default=RoomType.SINGLE
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now()
+        DateTime(timezone=True), onupdate=func.now(), server_default=func.now()
     )
 
     # Связи

@@ -135,7 +135,7 @@ async def update_user(user_id: int, user_in: UserUpdate, db: AsyncSession) -> Us
             detail="User not found"
         )
 
-    user_data = user_in.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
+    user_data = user_in.model_dump(exclude_unset=True)
 
     for field in User.UNIQUE_FIELDS:
         if field in user_data:
@@ -160,7 +160,7 @@ async def update_user(user_id: int, user_in: UserUpdate, db: AsyncSession) -> Us
 
 async def get_all_users(db: AsyncSession) -> List[User]:
     result = await db.execute(
-            select(User).order_by(User.is_superuser.desc())
+            select(User).order_by(User.id.desc())
         )
     users = result.scalars().all()
     if not users:

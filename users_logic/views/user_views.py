@@ -6,11 +6,9 @@ from core.database import get_db
 from sqlalchemy import select
 from starlette import status
 
-from users_logic.dependencies import (
-    get_user_by_id,
-    get_current_user,
-    get_current_active_superuser,
-)
+from users_logic.dependencies import get_user_by_id
+from core.models.user import UserRole
+from core.permissions import get_current_user, RoleChecker
 from users_logic.schemas.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
@@ -26,7 +24,7 @@ router = APIRouter(
 )
 
 @router.get("/all/", response_model=List[UsersResponse])
-async def get_users(_=Depends(get_current_active_superuser), db: AsyncSession = Depends(get_db)):
+async def get_all_users(_=Depends(RoleChecker(UserRole.ADMIN)), db: AsyncSession = Depends(get_db)):
     return await crud.get_all_users(db=db)
 
 
@@ -47,7 +45,7 @@ async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.delete("/{user_id}/delete/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    await crud.delete_user(user_id=user_id, db=db)
+    return await crud.delete_user(user_id=user_id, db=db)
 
 
 @router.patch("/{user_id}/update/", response_model=UserResponse, status_code=status.HTTP_200_OK)
@@ -57,4 +55,3 @@ async def patch_user(user_id: int, user_update: UserUpdate, db: AsyncSession = D
     Обновляются только переданные поля.
     """
     return await crud.update_user(user_id=user_id, user_in=user_update, db=db)
-

@@ -59,7 +59,7 @@ async def delete_hotel(hotel_id: int, db: AsyncSession) -> bool:
 async def update_hotel(hotel_id: int, hotel_in: HotelUpdate, db: AsyncSession):
     hotel = await get_hotel_by_id(hotel_id, db=db)
 
-    hotel_data = hotel_in.model_dump(exclude_unset=True, exclude_defaults=True, exclude_none=True)
+    hotel_data = hotel_in.model_dump(exclude_unset=True)
 
     for field, value in hotel_data.items():
         setattr(hotel, field, value)
