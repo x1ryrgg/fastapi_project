@@ -4,13 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from starlette import status
 
-from core.models import Hotel, RoomInformation
+from core.models import Hotel, RoomInformation, Room
 from core.models.user import UserRole, User
 from core.permissions import RoleChecker
-from hotel_logic.dependencies import get_hotel_by_id, get_room_information_by_id
+from hotel_logic.dependencies import get_hotel_by_id, get_room_information_by_id, get_room_by_id
 from hotel_logic.schemas import (HotelCreate, HotelResponse, HotelUpdate,
                                  RoomInformationResponse, RoomInformationCreate, RoomInformationUpdate, RoomCreate,
-                                 RoomResponse)
+                                 RoomResponse, RoomUpdate)
 from fastapi import Depends, APIRouter, HTTPException, status
 from hotel_logic.cruds import hotel_crud, room_crud
 from users_logic.getters import get_hotel_owners_ids
@@ -81,7 +81,7 @@ async def get_room_information(db: AsyncSession = Depends(get_db),
     return room_information
 
 
-@router.patch("/rooms/information/{room_info_id}/update/", response_model=RoomInformationResponse, status_code=status.HTTP_200_OK)
+@router.patch("/rooms/information/{room_info_id}/patch/", response_model=RoomInformationResponse, status_code=status.HTTP_200_OK)
 async def patch_room_information(room_info_id: int, room_info_in: RoomInformationUpdate,
                                  db: AsyncSession = Depends(get_db),
                                  user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))):
@@ -112,3 +112,26 @@ async def create_room(room_in: RoomCreate,
         )
 
     return await room_crud.create_room(room_in=room_in, db=db)
+
+
+@router.get("/{hotel_id}/rooms/all/", response_model=List[RoomResponse], status_code=status.HTTP_200_OK)
+async def get_all_rooms(hotel_id:int, db: AsyncSession = Depends(get_db)):
+    """ """
+    return await room_crud.get_all_rooms(hotel_id=hotel_id, db=db)
+
+
+@router.get("/rooms/{room_id}/", response_model=RoomResponse, status_code=status.HTTP_200_OK)
+async def get_room(room: Room = Depends(get_room_by_id)):
+    return room
+
+
+@router.patch("/rooms/{room_id}/patch/", response_model=RoomResponse, status_code=status.HTTP_200_OK)
+async def patch_room(room_id: int, room_in: RoomUpdate,
+                     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER)), db: AsyncSession = Depends(get_db)):
+    """ """
+    pass
+
+@router.delete("/rooms/{room_id}/delete/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_room(room_id: int, db: AsyncSession = Depends(get_db)):
+    """ """
+    pass

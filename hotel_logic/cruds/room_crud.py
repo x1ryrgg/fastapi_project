@@ -4,6 +4,8 @@ from typing import List
 from sqlalchemy.engine.result import Result
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+
 from core.models.hotel import Hotel, Room, RoomInformation, UserHotel
 from hotel_logic.cruds.hotel_crud import get_hotel_by_id
 from hotel_logic.dependencies import get_room_information_by_id
@@ -57,16 +59,6 @@ async def delete_room_information(room_info_id: int, db: AsyncSession) -> bool:
 
 
 # =========================== Room CRUD ==========================
-async def get_room_by_id(room_id: int, db: AsyncSession) -> Room:
-    """ Возврат Room по id """
-    room = await db.get(Room, room_id)
-    if not room:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
-        )
-
-    return room
-
 async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
     """ """
     room_data = room_in.model_dump(exclude_unset=True)
@@ -77,6 +69,16 @@ async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
     if info_id:
         await get_room_information_by_id(room_info_id=info_id, db=db)
 
+    result: Result = await db.execute(select(Room)
+        .where((Room.hotel_id == room_data.get('hotel_id')) & (Room.number == room_data.get('number')))
+        )
+    existing_room = result.scalars().one_or_none()
+    if existing_room:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Room with that number already has in this hotel."
+        )
+
     room = Room(**room_data)
 
     db.add(room)
@@ -84,3 +86,14 @@ async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
     await db.refresh(room)
 
     return room
+
+async def get_all_rooms(hotel_id: int, db: AsyncSession) -> List[Room]:
+    """ """
+    result: Result = await db.execute(select(Room).options(
+        joinedload(Room.hotel),
+        joinedload(Room.room_information)
+            ).where(Room.hotel_id == hotel_id)
+        )
+    rooms = result.scalars().all()
+
+    return rooms

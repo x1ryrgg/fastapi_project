@@ -90,10 +90,11 @@ class RoomResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    hotel_id: int
-    info_id: Optional[int] = None
     floor: int
     number: int
     created_at: datetime
     updated_at: datetime
+
+    hotel: HotelResponse
+    room_information: Optional[RoomInformationResponse] = None
 
