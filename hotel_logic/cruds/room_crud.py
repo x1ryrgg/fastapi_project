@@ -5,21 +5,14 @@ from sqlalchemy.engine.result import Result
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import select
 from core.models.hotel import Hotel, Room, RoomInformation, UserHotel
-from hotel_logic.schemas import RoomInformationCreate, RoomInformationUpdate
+from hotel_logic.cruds.hotel_crud import get_hotel_by_id
+from hotel_logic.dependencies import get_room_information_by_id
+from hotel_logic.schemas import RoomInformationCreate, RoomInformationUpdate, RoomCreate, RoomUpdate
 from core.logging_system import logger
 from fastapi import Depends, HTTPException, status
 
 
-async def get_room_information_by_id(room_info_id: int, db: AsyncSession) -> RoomInformation:
-    """ Возврат RoomInformation по id """
-    room_info = await db.get(RoomInformation, room_info_id)
-    if not room_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="RoomInformation not found"
-        )
-
-    return room_info
-
+# =========================== RoomInformation CRUD ==========================
 async def create_room_information(room_information_in: RoomInformationCreate, db: AsyncSession) -> RoomInformation:
     """ Создание RoomInformation """
     room_information_data = room_information_in.model_dump(exclude_unset=True)
@@ -38,18 +31,6 @@ async def get_all_hotel_information(db: AsyncSession) -> List[RoomInformation]:
 
     return room_info
 
-async def get_hotel_information(room_info_id: int, db: AsyncSession) -> RoomInformation:
-    """ Возврат записи RoomInformation по id """
-    room_info = await db.get(RoomInformation, room_info_id)
-    if not room_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="HotelInformation not found"
-        )
-
-    return room_info
-
-
 async def update_room_information(room_info_id: int, room_info_in: RoomInformationUpdate, db: AsyncSession):
     """ Частичное обновление RoomInformation """
     room_info = await get_room_information_by_id(room_info_id, db=db)
@@ -63,13 +44,43 @@ async def update_room_information(room_info_id: int, room_info_in: RoomInformati
     await db.refresh(room_info)
     return room_info
 
-
 async def delete_room_information(room_info_id: int, db: AsyncSession) -> bool:
+    """ Удаление RoomInformation """
     room_info = await get_room_information_by_id(room_info_id, db=db)
 
     room_info_id = room_info.id # для лога
 
     await db.delete(room_info)
     await db.commit()
-    logger.info(f"[delete_update_room_information] Hotel #{room_info_id} successfully deleted. ")
+    logger.info(f"[delete_room_information] Hotel #{room_info_id} successfully deleted. ")
     return True
+
+
+# =========================== Room CRUD ==========================
+async def get_room_by_id(room_id: int, db: AsyncSession) -> Room:
+    """ Возврат Room по id """
+    room = await db.get(Room, room_id)
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
+        )
+
+    return room
+
+async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
+    """ """
+    room_data = room_in.model_dump(exclude_unset=True)
+
+    await get_hotel_by_id(hotel_id=room_data.get('hotel_id'), db=db)
+
+    info_id = room_data.get('info_id')
+    if info_id:
+        await get_room_information_by_id(room_info_id=info_id, db=db)
+
+    room = Room(**room_data)
+
+    db.add(room)
+    await db.commit()
+    await db.refresh(room)
+
+    return room
