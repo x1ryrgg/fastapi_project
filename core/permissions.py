@@ -72,3 +72,6 @@ class RoleChecker:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
             )
+        return current_user
+
+

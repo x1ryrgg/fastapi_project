@@ -64,7 +64,7 @@ async def update_room_information(room_info_id: int, room_info_in: RoomInformati
     return room_info
 
 
-async def delete_update_room_information(room_info_id: int, db: AsyncSession) -> bool:
+async def delete_room_information(room_info_id: int, db: AsyncSession) -> bool:
     room_info = await get_room_information_by_id(room_info_id, db=db)
 
     room_info_id = room_info.id # для лога

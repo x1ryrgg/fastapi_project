@@ -9,51 +9,52 @@ from core.models.hotel import RoomType
 
 
 class HotelCreate(BaseModel):
-    name: str = Annotated[str, MaxLen(300)]
-    city: str = Annotated[str, MaxLen(300)]
-    address: str = Annotated[str, MaxLen(300)]
-    region: str = Annotated[str, MaxLen(300)]
-    description: Optional[str]
-    stars: int = Annotated[int, MaxLen(5)]
-    phone: Optional[str]
-    email: Optional[str]
-    created_at: datetime
-    updated_at: datetime
+    name: Annotated[str, Field(min_length=1, max_length=300)]
+    city: Annotated[str, Field(min_length=1, max_length=300)]
+    address: Annotated[str, Field(min_length=1, max_length=300)]
+    region: Annotated[str, Field(min_length=1, max_length=300)]
+    description: Optional[str] = "Нет описания."
+    stars: Annotated[int, Field(ge=1, le=5)]
+    phone: Optional[Annotated[str, Field(max_length=20)]] = None
+    email: Optional[EmailStr] = None
 
 
 class HotelUpdate(BaseModel):
-    name: Optional[Annotated[str, Field(max_length=300)]] = None
-    city: Optional[Annotated[str, Field(max_length=300)]] = None
-    address: Optional[Annotated[str, Field(max_length=300)]] = None
-    region: Optional[Annotated[str, Field(max_length=300)]] = None
+    name: Optional[Annotated[str, Field(min_length=1, max_length=300)]] = None
+    city: Optional[Annotated[str, Field(min_length=1, max_length=300)]] = None
+    address: Optional[Annotated[str, Field(min_length=1, max_length=300)]] = None
+    region: Optional[Annotated[str, Field(min_length=1, max_length=300)]] = None
     description: Optional[str] = None
     stars: Optional[Annotated[int, Field(ge=1, le=5)]] = None
     phone: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
 class HotelResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: int
     name: str
     city: str
     address: str
     region: str
-    description: str
+    description: Optional[str] = None
     stars: int
-    phone: str
-    email: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
 
 class RoomInformationCreate(BaseModel):
     price_per_night: float
-    capacity: Optional[Annotated[int, Field(ge=1)]] = None
-    size: Optional[Annotated[float, Field(ge=15)]] = None
-    type: Optional[RoomType] = None
+    capacity: Optional[Annotated[int, Field(ge=1)]] = 1.0
+    size: Optional[Annotated[float, Field(ge=15)]] = 15.0
+    type: Optional[RoomType] = RoomType.SINGLE
 
 
 class RoomInformationUpdate(BaseModel):
-    price_per_night: Optional[float] = None
+    price_per_night: Optional[Annotated[float, Field(ge=0)]] = None
     capacity: Optional[Annotated[int, Field(ge=1)]] = None
     size: Optional[Annotated[float, Field(ge=15)]] = None
     type: Optional[RoomType] = None
@@ -69,3 +70,30 @@ class RoomInformationResponse(BaseModel):
     type: RoomType
     created_at: datetime
     updated_at: datetime
+
+
+class RoomCreate(BaseModel):
+    hotel_id: Annotated[int, Field(ge=1)]
+    info_id: Optional[Annotated[int, Field(ge=1)]] = None
+    floor: Annotated[int, Field(ge=1)]
+    number: Annotated[int, Field(ge=1)]
+
+
+class RoomUpdate(BaseModel):
+    hotel_id: Optional[Annotated[int, Field(ge=1)]] = None
+    info_id: Optional[Annotated[int, Field(ge=1)]] = None
+    floor: Optional[Annotated[int, Field(ge=1)]] = None
+    number: Optional[Annotated[int, Field(ge=1)]] = None
+
+
+class RoomResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    hotel_id: int
+    info_id: Optional[int] = None
+    floor: int
+    number: int
+    created_at: datetime
+    updated_at: datetime
+

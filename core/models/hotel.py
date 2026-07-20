@@ -146,6 +146,6 @@ class RoomInformation(Base):
     room: Mapped[List["Room"]] = relationship("Room", uselist=True, back_populates="room_information")
 
     __table_args__ = (
-        CheckConstraint("size >= 12", name="size_min_length"),
+        CheckConstraint("size >= 15", name="size_min_length"),
         CheckConstraint("capacity > 0", name="capacity_positive"),
     )

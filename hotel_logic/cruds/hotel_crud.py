@@ -20,10 +20,13 @@ async def get_hotel_by_id(hotel_id: int, db: AsyncSession) -> Hotel:
     return hotel
 
 
-async def create_hotel(hotel_in: HotelCreate, db: AsyncSession) -> Hotel:
+async def create_hotel(hotel_in: HotelCreate, user_id: int, db: AsyncSession) -> Hotel:
     """ """
     hotel_info = hotel_in.model_dump()
     hotel = Hotel(**hotel_info)
+
+    user_hotel = UserHotel(user_id=user_id)
+    hotel.users_link.append(user_hotel)
 
     db.add(hotel)
     await db.commit()

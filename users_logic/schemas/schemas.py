@@ -5,9 +5,11 @@ from typing import Annotated, Optional
 from annotated_types import MaxLen, MinLen
 from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 
+from core.models.user import UserRole
+
 
 class UserCreate(BaseModel):
-    username: str = Annotated[str, MaxLen(50)]
+    username: Annotated[str, Field(max_length=50)]
     email: EmailStr
     password: str
 
@@ -40,20 +42,12 @@ class UserUpdate(BaseModel):
     password: Optional[Annotated[str, Field(min_length=8)]] = None
 
 
-class UserBase(BaseModel):
+class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
     id: int
-
-
-class UserResponse(UserBase):
     username: str
     email: EmailStr
     is_active: bool
-    is_superuser: bool
-    created_at: datetime
-
-
-class UsersResponse(UserBase):
-    username: str
-    email: EmailStr
+    role: UserRole
     created_at: datetime

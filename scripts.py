@@ -1,5 +1,7 @@
+import random
+
 from core.database import async_session_maker
-from core.models.hotel import Hotel
+from core.models.hotel import Hotel, RoomInformation, UserHotel, Room, RoomType
 from core.models.user import User, UserRole
 import asyncio
 import os
@@ -11,30 +13,124 @@ from users_logic.security import hash_password, verify_password
 load_dotenv()
 
 
-user_names = [
-    'Александр', 'Алексей', 'Анатолий', 'Андрей', 'Антон'
-    ]
+USER_NAMES = ["alex", "john", "maria", "elena", "dmitry"]
 
-async def create_users():
+HOTELS_DATA = [
+    {
+        "name": "Grand Palace Hotel",
+        "city": "Москва",
+        "address": "ул. Тверская, д. 12",
+        "region": "Московская область",
+        "stars": 5,
+        "phone": "+74951234567",
+        "email": "info@grandpalace.ru",
+        "description": "Роскошный отель в самом центре столицы."
+    },
+    {
+        "name": "Seaside Resort & Spa",
+        "city": "Сочи",
+        "address": "Курортный проспект, д. 85",
+        "region": "Краснодарский край",
+        "stars": 4,
+        "phone": "+78622998877",
+        "email": "booking@seaside.ru",
+        "description": "Отель на первой линии с собственным пляжем."
+    },
+    {
+        "name": "Comfort Inn",
+        "city": "Санкт-Петербург",
+        "address": "Невский проспект, д. 45",
+        "region": "Ленинградская область",
+        "stars": 3,
+        "phone": "+78125553322",
+        "email": "stay@comfortinn.spb.ru",
+        "description": "Уютный отель для бизнес-поездок и туристов."
+    }
+]
+
+# Наборы характеристик номеров
+ROOM_INFO_DATA = [
+    {"type": RoomType.SINGLE, "price_per_night": 2500.0, "capacity": 1, "size": 18.0},
+    {"type": RoomType.DOUBLE, "price_per_night": 4500.0, "capacity": 2, "size": 25.0},
+    {"type": RoomType.TWIN, "price_per_night": 4200.0, "capacity": 2, "size": 24.0},
+    {"type": RoomType.SUITE, "price_per_night": 9000.0, "capacity": 3, "size": 45.0},
+    {"type": RoomType.FAMILY, "price_per_night": 7000.0, "capacity": 4, "size": 38.0},
+]
+
+
+async def seed_database():
     async with async_session_maker() as session:
-        password = hash_password("12345678")
-        root_user = User(username="root",
-                         password=password,
-                         email='root@inbox.ru',
-                         role=UserRole.ADMIN)
-        manager_user = User(username="manager",
-                            password=password,
-                            email='manager@inbox.ru',
-                            role=UserRole.HOTEL_MANAGER)
-        session.add(root_user)
-        session.add(manager_user)
-        await session.commit()
+        # 1. Проверяем, есть ли уже данные (чтобы не дублировать при повторном запуске)
+        existing_user = await session.scalar(select(User).limit(1))
+        if existing_user:
+            print("⚠️ База данных уже содержит данные. Пропускаем сидирование.")
+            return
 
-        for username in user_names:
-            email = f"{username}@example.com"
-            user = User(username=username, email=email, password=password)
+        print("🚀 Начинаем заполнение базы данных...")
+        password_hash = hash_password("12345678")
+
+        # 2. Создаем системных пользователей
+        root_user = User(
+            username="root",
+            password=password_hash,
+            email="root@inbox.ru",
+            role=UserRole.ADMIN
+        )
+        manager_user = User(
+            username="manager",
+            password=password_hash,
+            email="manager@inbox.ru",
+            role=UserRole.HOTEL_MANAGER
+        )
+        session.add_all([root_user, manager_user])
+
+        # 3. Создаем обычных клиентов (Customers)
+        created_customers = []
+        for username in USER_NAMES:
+            user = User(
+                username=username,
+                email=f"{username}@example.com",
+                password=password_hash,
+                role=UserRole.CUSTOMER
+            )
+            created_customers.append(user)
             session.add(user)
-            await session.commit()
+
+        # 4. Создаем типы комнат (RoomInformation)
+        room_infos = [RoomInformation(**info) for info in ROOM_INFO_DATA]
+        session.add_all(room_infos)
+
+        # Флашим сессию, чтобы получить сгенерированные ID для связей
+        await session.flush()
+
+        # 5. Создаем отели и связываем их с Менеджером (M2M через UserHotel)
+        for h_data in HOTELS_DATA:
+            hotel = Hotel(**h_data)
+            session.add(hotel)
+            await session.flush()  # Получаем hotel.id
+
+            # Привязываем отель к менеджеру через промежуточную таблицу
+            user_hotel_link = UserHotel(user_id=manager_user.id, hotel_id=hotel.id)
+            session.add(user_hotel_link)
+
+            # 6. Создаем физические комнаты (Rooms) для каждого отеля
+            # Например: 3 этажа по 4 комнаты на каждом
+            for floor in range(1, 4):
+                for num in range(1, 5):
+                    room_number = floor * 100 + num  # 101, 102... 201, 202...
+                    selected_info = random.choice(room_infos)
+
+                    room = Room(
+                        hotel_id=hotel.id,
+                        info_id=selected_info.id,
+                        floor=floor,
+                        number=room_number
+                    )
+                    session.add(room)
+
+        # 7. Финальный коммит всей транзакции
+        await session.commit()
+        print("База данных успешно заполнена тестовыми данными")
 
 
 async def check_orm_results():
@@ -82,4 +178,4 @@ async def check_code_decode_system():
 
 
 if __name__ == "__main__":
-    asyncio.run(create_users())
+    asyncio.run(seed_database())

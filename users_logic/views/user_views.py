@@ -9,7 +9,7 @@ from starlette import status
 from users_logic.dependencies import get_user_by_id
 from core.models.user import UserRole
 from core.permissions import get_current_user, RoleChecker
-from users_logic.schemas.schemas import UserCreate, UserResponse, UsersResponse, UserUpdate
+from users_logic.schemas.schemas import UserCreate, UserResponse, UserUpdate
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from core.models.user import User
@@ -23,7 +23,7 @@ router = APIRouter(
     tags=["users"]
 )
 
-@router.get("/all/", response_model=List[UsersResponse])
+@router.get("/all/", response_model=List[UserResponse])
 async def get_all_users(_=Depends(RoleChecker(UserRole.ADMIN)), db: AsyncSession = Depends(get_db)):
     return await crud.get_all_users(db=db)
 
@@ -38,9 +38,9 @@ async def view_get_user(user: User = Depends(get_user_by_id)):
     return user
 
 
-@router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
-    return await crud.create_user(user_in=user, db=db)
+# @router.post("/create/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+# async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+#     return await crud.create_user(user_in=user, db=db)
 
 
 @router.delete("/{user_id}/delete/", status_code=status.HTTP_204_NO_CONTENT)
