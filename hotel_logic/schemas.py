@@ -1,5 +1,5 @@
 import re
-
+from decimal import Decimal
 from datetime import datetime
 from typing import Annotated, Optional
 from annotated_types import MaxLen, MinLen
@@ -47,14 +47,14 @@ class HotelResponse(BaseModel):
 
 
 class RoomInformationCreate(BaseModel):
-    price_per_night: float
-    capacity: Optional[Annotated[int, Field(ge=1)]] = 1.0
-    size: Optional[Annotated[float, Field(ge=15)]] = 15.0
+    price_per_night: Annotated[Decimal, Field(gt=0, max_digits=10, decimal_places=2, description="Цена за сутки")]
+    capacity: Optional[Annotated[int, Field(ge=1)]] = 1
+    size: Optional[Annotated[float, Field(ge=15)]] = 15
     type: Optional[RoomType] = RoomType.SINGLE
 
 
 class RoomInformationUpdate(BaseModel):
-    price_per_night: Optional[Annotated[float, Field(ge=0)]] = None
+    price_per_night: Optional[Annotated[Decimal, Field(gt=0, max_digits=10, decimal_places=2, description="Цена за сутки")]] = None
     capacity: Optional[Annotated[int, Field(ge=1)]] = None
     size: Optional[Annotated[float, Field(ge=15)]] = None
     type: Optional[RoomType] = None
@@ -64,7 +64,7 @@ class RoomInformationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    price_per_night: float
+    price_per_night: Decimal
     capacity: int
     size: float
     type: RoomType

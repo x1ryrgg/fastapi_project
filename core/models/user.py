@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from random import choices
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint, Enum as SQLEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -12,7 +12,7 @@ from core.models.base import Base
 from enum import Enum
 
 if TYPE_CHECKING:
-    from .hotel import Hotel
+    from .hotel import Hotel, UserHotel
     from .reservation import Reservation
 
 
@@ -39,11 +39,17 @@ class User(Base):
     hotels: Mapped[list["Hotel"]] = relationship(
         "Hotel", secondary="users_hotels", back_populates="users", lazy="selectin", viewonly=True
     )
-    hotels_link: Mapped[list["UserHotel"]] = relationship(
+    hotels_link: Mapped[list["UserHotel"]] = relationship( # если удалится пользователь, то удалятся все связанные данные в UserHotel
         "UserHotel", back_populates="user", cascade="all, delete-orphan"
     )
 
-    reservations: Mapped[list["Reservation"]] = relationship("Reservation", uselist=True, back_populates="user")
+    reservations: Mapped[list["Reservation"]] = relationship(
+        "Reservation", uselist=True, back_populates="user", cascade="all, delete-orphan"
+    )
+
+    bank_account: Mapped[Optional["User"]] = relationship(
+        "BankAccount", uselist=False, back_populates="user"
+    )
 
     UNIQUE_FIELDS = ["username", "email"]
 

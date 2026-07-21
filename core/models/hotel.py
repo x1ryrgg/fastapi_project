@@ -1,9 +1,10 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 import uuid
 from random import choices
 
-from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint, Enum as SQLEnum, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import ForeignKey
@@ -16,6 +17,7 @@ from core.models.base import Base
 
 if TYPE_CHECKING:
     from .reservation import Reservation
+    from .user import User
 
 
 class UserHotel(Base):
@@ -130,10 +132,12 @@ class RoomType(str, Enum):
 class RoomInformation(Base):
     __tablename__ = "room_information"
 
-    price_per_night: Mapped[float] = mapped_column(Float, comment="Цена за сутки", nullable=False)
+    price_per_night: Mapped[Decimal] = mapped_column(Numeric(10, 2),
+                                                     comment="Цена за сутки",
+                                                     nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, comment="Вместимость клиентов", nullable=False, default=1)
     size: Mapped[float] = mapped_column(Float, comment="Размер в м^2", nullable=False, default=15)
-    type: Mapped[RoomType] = mapped_column(String(20),comment="Тип номера", nullable=False, default=RoomType.SINGLE)
+    type: Mapped[RoomType] = mapped_column(String(20), comment="Тип номера", nullable=False, default=RoomType.SINGLE)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

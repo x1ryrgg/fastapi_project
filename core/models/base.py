@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer
 from core.config import settings
 from sqlalchemy.orm import Mapped, mapped_column
 
-# класс служит основой (регистрацией) для всех ваших ORM-моделей
+# класс служит основой (регистрацией) для всех ORM-моделей
 class Base(DeclarativeBase):
     __abstract__ = True
 
