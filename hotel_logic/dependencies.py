@@ -14,7 +14,7 @@ from core.models.user import UserRole
 
 
 async def get_hotel_by_id(hotel_id: int, db: AsyncSession = Depends(get_db), load_relationships: bool = False) -> Hotel:
-    """ Нахождение записи Hotel по id. """
+    """ Получение Hotel по id """
     stmt = (select(Hotel).where(Hotel.id == hotel_id)
     )
 
@@ -35,7 +35,7 @@ async def get_hotel_by_id(hotel_id: int, db: AsyncSession = Depends(get_db), loa
     return hotel
 
 async def get_room_information_by_id(room_info_id: int, db: AsyncSession = Depends(get_db)) -> RoomInformation:
-    """ Возврат RoomInformation по id """
+    """ Получение RoomInformation по id """
     room_info = await db.get(RoomInformation, room_info_id)
     if not room_info:
         raise HTTPException(
@@ -47,6 +47,7 @@ async def get_room_information_by_id(room_info_id: int, db: AsyncSession = Depen
 
 
 async def get_room_by_id(room_id: int, db: AsyncSession = Depends(get_db), load_relationships: bool = False) -> Room:
+    """ Получение Room по id """
     stmt = select(Room).where(Room.id == room_id)
 
     if load_relationships:

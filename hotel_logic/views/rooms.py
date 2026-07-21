@@ -22,6 +22,7 @@ async def create_room(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View создания Room """
     hotel = await get_hotel_by_id(hotel_id=room_in.hotel_id, db=db, load_relationships=True)
     check_manager_permissions(hotel=hotel, user=user)
     return await room_crud.create_room(room_in=room_in, db=db)
@@ -29,11 +30,13 @@ async def create_room(
 
 @router.get("/hotel/{hotel_id}/", response_model=List[RoomResponse], status_code=status.HTTP_200_OK)
 async def get_all_rooms_by_hotel(hotel_id: int, db: AsyncSession = Depends(get_db)):
+    """ View получения всех номеров отеля """
     return await room_crud.get_all_rooms(hotel_id=hotel_id, db=db)
 
 
 @router.get("/{room_id}/", response_model=RoomResponse, status_code=status.HTTP_200_OK)
 async def get_room(room_id: int, db: AsyncSession = Depends(get_db)):
+    """ View получения Room"""
     return await get_room_by_id(room_id=room_id, db=db, load_relationships=True)
 
 
@@ -44,6 +47,7 @@ async def patch_room(
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER)),
     db: AsyncSession = Depends(get_db)
 ):
+    """ View частичного изменения Room """
     room = await get_room_by_id(room_id=room_id, db=db, load_relationships=True)
     check_manager_permissions(hotel=room.hotel, user=user)
     return await room_crud.update_room(room_id=room_id, room_in=room_in, db=db)
@@ -55,6 +59,7 @@ async def delete_room(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View удаления Room"""
     room = await get_room_by_id(room_id=room_id, db=db, load_relationships=True)
     check_manager_permissions(hotel=room.hotel, user=user)
     return await room_crud.delete_room(room_id=room_id, db=db)

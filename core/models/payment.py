@@ -15,10 +15,7 @@ class BankAccount(Base):
     __tablename__ = "bank_accounts"
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
-        unique=True,
-        nullable=False,
-        index=True
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
     account_number: Mapped[str] = mapped_column(
         String(34), unique=True, index=True, nullable=False, comment="Номер счета"
@@ -60,7 +57,7 @@ class Payment(Base):
 
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, comment="Сумма")
     status: Mapped[PaymentStatus] = mapped_column(
-        String(20), nullable=False, default=PaymentStatus.PENDING
+        String(20), nullable=False, default=PaymentStatus.PENDING, comment="Статус операции"
     )
 
     created_at: Mapped[datetime] = mapped_column(

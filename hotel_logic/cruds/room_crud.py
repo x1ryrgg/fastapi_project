@@ -27,7 +27,7 @@ async def create_room_information(room_information_in: RoomInformationCreate, db
     return room_info
 
 async def get_all_hotel_information(db: AsyncSession) -> List[RoomInformation]:
-    """ Возврат всех записей RoomInformation """
+    """ Нахождение всех записей RoomInformation """
     result: Result = await db.execute(select(RoomInformation).order_by(RoomInformation.type))
     room_info = result.scalars().all()
 
@@ -58,7 +58,7 @@ async def delete_room_information(room_info_id: int, db: AsyncSession) -> bool:
 
 # =========================== Room CRUD ==========================
 async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
-    """ """
+    """ Создание Room """
     room_data = room_in.model_dump(exclude_unset=True)
 
     await get_hotel_by_id(hotel_id=room_data.get('hotel_id'), db=db)
@@ -84,7 +84,7 @@ async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
     return await get_room_by_id(room_id=room.id, db=db, load_relationships=True)
 
 async def get_all_rooms(hotel_id: int, db: AsyncSession) -> List[Room]:
-    """ """
+    """ Получение всех Room по связанному Hotel"""
     result: Result = await db.execute(select(Room).options(
         joinedload(Room.hotel),
         joinedload(Room.room_information)
@@ -96,7 +96,7 @@ async def get_all_rooms(hotel_id: int, db: AsyncSession) -> List[Room]:
 
 
 async def update_room(room_id: int, room_in: RoomUpdate, db: AsyncSession) -> Room:
-    """ """
+    """ Обновление Room """
     room = await get_room_by_id(room_id=room_id, db=db, load_relationships=True)
 
     room_data = room_in.model_dump(exclude_unset=True)
@@ -114,6 +114,7 @@ async def update_room(room_id: int, room_in: RoomUpdate, db: AsyncSession) -> Ro
 
 
 async def delete_room(room_id: int, db: AsyncSession) -> bool:
+    """ Удаление Room"""
     room = await get_room_by_id(room_id, db=db, load_relationships=True)
 
     room_number = room.number

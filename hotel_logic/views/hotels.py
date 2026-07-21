@@ -23,16 +23,19 @@ async def create_hotel(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """View создания Hotel"""
     return await hotel_crud.create_hotel(hotel_in=hotel_in, user_id=user.id, db=db)
 
 
 @router.get("/", response_model=List[HotelResponse], status_code=status.HTTP_200_OK)
 async def get_all_hotels(db: AsyncSession = Depends(get_db)):
+    """View получения всех отелей """
     return await hotel_crud.get_all_hotels(db=db)
 
 
 @router.get("/{hotel_id}/", response_model=HotelResponse, status_code=status.HTTP_200_OK)
 async def get_hotel(hotel: Hotel = Depends(get_hotel_by_id)):
+    """ View получения Hotel по его id """
     return hotel
 
 
@@ -43,6 +46,7 @@ async def patch_hotel(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View частичного изменения Hotel """
     hotel = await get_hotel_by_id(hotel_id=hotel_id, db=db, load_relationships=True)
     check_manager_permissions(hotel=hotel, user=user)
     return await hotel_crud.update_hotel(hotel_id=hotel_id, hotel_in=hotel_in, db=db)
@@ -54,6 +58,7 @@ async def delete_hotel(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View удаления Hotel """
     hotel = await get_hotel_by_id(hotel_id=hotel_id, db=db, load_relationships=True)
     check_manager_permissions(hotel=hotel, user=user)
     return await hotel_crud.delete_hotel(hotel_id=hotel_id, db=db)

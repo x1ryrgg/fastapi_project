@@ -23,16 +23,19 @@ async def create_room_information(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View создания RoomInformation """
     return await room_crud.create_room_information(room_information_in=room_information_in, db=db)
 
 
 @router.get("/all/", response_model=List[RoomInformationResponse], status_code=status.HTTP_200_OK)
 async def get_all_room_information(db: AsyncSession = Depends(get_db)):
+    """ View получения всех RoomInformation  """
     return await room_crud.get_all_hotel_information(db=db)
 
 
 @router.get("/{room_info_id}/", response_model=RoomInformationResponse, status_code=status.HTTP_200_OK)
 async def get_room_information(room_info: RoomInformation = Depends(get_room_information_by_id)):
+    """ View получения RoomInformation по его id """
     return room_info
 
 
@@ -43,6 +46,7 @@ async def patch_room_information(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View частичного обновления RoomInformation """
     return await room_crud.update_room_information(room_info_id=room_info_id, room_info_in=room_info_in, db=db)
 
 
@@ -52,4 +56,5 @@ async def delete_room_information(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(RoleChecker(UserRole.HOTEL_MANAGER))
 ):
+    """ View удаления RoomInformation """
     return await room_crud.delete_room_information(room_info_id=room_info_id, db=db)
