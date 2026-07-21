@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 
 from core.models.hotel import Hotel, Room, RoomInformation, UserHotel
 from hotel_logic.cruds.hotel_crud import get_hotel_by_id
-from hotel_logic.dependencies import get_room_information_by_id
+from hotel_logic.dependencies import get_room_information_by_id, get_room_by_id
 from hotel_logic.schemas import RoomInformationCreate, RoomInformationUpdate, RoomCreate, RoomUpdate
 from core.logging_system import logger
 from fastapi import Depends, HTTPException, status
@@ -33,7 +33,7 @@ async def get_all_hotel_information(db: AsyncSession) -> List[RoomInformation]:
 
     return room_info
 
-async def update_room_information(room_info_id: int, room_info_in: RoomInformationUpdate, db: AsyncSession):
+async def update_room_information(room_info_id: int, room_info_in: RoomInformationUpdate, db: AsyncSession) -> RoomInformation:
     """ Частичное обновление RoomInformation """
     room_info = await get_room_information_by_id(room_info_id, db=db)
 
@@ -49,8 +49,6 @@ async def update_room_information(room_info_id: int, room_info_in: RoomInformati
 async def delete_room_information(room_info_id: int, db: AsyncSession) -> bool:
     """ Удаление RoomInformation """
     room_info = await get_room_information_by_id(room_info_id, db=db)
-
-    room_info_id = room_info.id # для лога
 
     await db.delete(room_info)
     await db.commit()
@@ -83,9 +81,7 @@ async def create_room(room_in: RoomCreate, db: AsyncSession) -> Room:
 
     db.add(room)
     await db.commit()
-    await db.refresh(room)
-
-    return room
+    return await get_room_by_id(room_id=room.id, db=db, load_relationships=True)
 
 async def get_all_rooms(hotel_id: int, db: AsyncSession) -> List[Room]:
     """ """
@@ -97,3 +93,34 @@ async def get_all_rooms(hotel_id: int, db: AsyncSession) -> List[Room]:
     rooms = result.scalars().all()
 
     return rooms
+
+
+async def update_room(room_id: int, room_in: RoomUpdate, db: AsyncSession) -> Room:
+    """ """
+    room = await get_room_by_id(room_id=room_id, db=db, load_relationships=True)
+
+    room_data = room_in.model_dump(exclude_unset=True)
+
+    info_id = room_data.get('info_id')
+    if info_id:
+        await get_room_information_by_id(room_info_id=info_id, db=db)
+
+    for field, value in room_data.items():
+        setattr(room, field, value)
+
+    await db.commit()
+    await db.refresh(room, attribute_names=["updated_at"])
+    return await get_room_by_id(room_id=room_id, db=db, load_relationships=True)
+
+
+async def delete_room(room_id: int, db: AsyncSession) -> bool:
+    room = await get_room_by_id(room_id, db=db, load_relationships=True)
+
+    room_number = room.number
+    hotel_name = room.hotel.name
+
+    await db.delete(room)
+    await db.commit()
+    logger.info(f"[delete_room] Room number: {room_number} Hotel {hotel_name} successfully deleted.")
+    return True
+

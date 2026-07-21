@@ -7,7 +7,9 @@ from fastapi import Request, status, HTTPException
 from core.logging_system import logger
 from users_logic.views.user_views import router as user_router
 from users_logic.views.auth_views import router as auth_router
-from hotel_logic.views import router as hotel_router
+from hotel_logic.views.hotels import router as hotel_router
+from hotel_logic.views.rooms import router as room_router
+from hotel_logic.views.room_information import router as room_information
 
 
 # uvicorn main:app --reload - запуск приложение на uvicron
@@ -21,9 +23,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title='TEST FASTAPI')
 
+app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(hotel_router)
-app.include_router(auth_router)
+app.include_router(room_router)
+app.include_router(room_information)
 
 
 @app.exception_handler(HTTPException)
@@ -49,11 +53,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error. Please try again later."},
     )
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
 
 @app.get("/ping/")
