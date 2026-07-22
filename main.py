@@ -10,6 +10,9 @@ from users_logic.views.authentication import router as auth_router
 from hotel_logic.views.hotels import router as hotel_router
 from hotel_logic.views.rooms import router as room_router
 from hotel_logic.views.room_information import router as room_information
+from payment_reservation_logic.views.payment import router as payment_router
+from payment_reservation_logic.views.reservation import router as reservation_router
+from payment_reservation_logic.views.bank_account import router as bank_account_router
 
 
 # uvicorn main:app --reload - запуск приложение на uvicron
@@ -25,9 +28,13 @@ app = FastAPI(lifespan=lifespan, title='TEST FASTAPI')
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(bank_account_router)
+app.include_router(payment_router)
+app.include_router(reservation_router)
 app.include_router(hotel_router)
 app.include_router(room_router)
 app.include_router(room_information)
+
 
 
 @app.exception_handler(HTTPException)
