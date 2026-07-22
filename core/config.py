@@ -11,9 +11,14 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    db_url: str = os.getenv("DATABASE_URL", "")
+    DB_URL: str = os.getenv("DATABASE_URL", "")
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int = 465
+    MAIL_SERVER: str
 
-    @field_validator('db_url')
+    @field_validator('DB_URL')
     @classmethod
     def validate_db_url(cls, v: str):
         if not v:

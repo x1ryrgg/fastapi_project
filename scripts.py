@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from sqlalchemy.sql import select
 from sqlalchemy.orm import joinedload, selectinload
 from users_logic.security import hash_password, verify_password
+from core.email_service import email_service
 
 load_dotenv()
 
@@ -177,5 +178,9 @@ async def check_code_decode_system():
         print(hash_password(test_password))
 
 
+async def send_email_message(to_email, text):
+    return await email_service.send_text_email(to_email=to_email, text=text)
+
+
 if __name__ == "__main__":
-    asyncio.run(seed_database())
+    asyncio.run(send_email_message(to_email="Roman.mostovoy.99@mail.ru", text="Ты идиот"))
