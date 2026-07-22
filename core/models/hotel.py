@@ -84,6 +84,10 @@ class Hotel(Base):
     __table_args__ = (CheckConstraint("stars <= 5", name="stars_max_count"),)
 
 
+class ReservationStatus(str, Enum):
+    VACANT = "vacant"
+    OCCUPIED = "occupied"
+
 class Room(Base):
     __tablename__ = "rooms"
 
@@ -96,6 +100,9 @@ class Room(Base):
         ForeignKey("room_information.id", ondelete="SET NULL"),
         comment="Внешний ключ к информации о номере",
         nullable=True,
+    )
+    status: Mapped[ReservationStatus] = mapped_column(
+        String(20), nullable=False, default=ReservationStatus.VACANT
     )
     floor: Mapped[int] = mapped_column(Integer, comment="Этаж", nullable=False)
     number: Mapped[int] = mapped_column(Integer, comment="Порядковое значение номера", nullable=False)

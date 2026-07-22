@@ -13,11 +13,18 @@ from core.models.hotel import Hotel, Room, RoomInformation
 from core.models.user import UserRole
 
 
-async def get_bank_account_by_user_id(user_id: int, db: AsyncSession):
+async def get_bank_account_by_user_id(user_id: int, db: AsyncSession, load_relationships: bool = False) -> BankAccount:
     """ Получение BankAccount по user_id """
-    stmt: Result = await db.execute(select(BankAccount)
-                                    .where(BankAccount.user_id == user_id)
-                                    )
+    stmt = select(BankAccount).where(BankAccount.user_id == user_id)
+
+    if load_relationships:
+        stmt = stmt.options(
+            selectinload(BankAccount.payments), # на той стороне payments много объектов one-to-many
+            joinedload(BankAccount.user) # на той стороне user 1 запись связь many-to-one / one-to-one
+        )
+
+    stmt: Result = await db.execute(stmt)
+
     bank_account = stmt.scalar_one_or_none()
 
     if not bank_account:

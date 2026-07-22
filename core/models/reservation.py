@@ -14,10 +14,6 @@ if TYPE_CHECKING:
     from .user import User
 
 
-class ReservationStatus(str, Enum):
-    VACANT = "vacant"
-    OCCUPIED = "occupied"
-
 class Reservation(Base):
     __tablename__ = "reservations"
 
@@ -27,7 +23,6 @@ class Reservation(Base):
     room_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("rooms.id"), comment="Внешний ключ к номеру", nullable=False
     )
-    status: Mapped[ReservationStatus] = mapped_column(String(20), nullable=False, default=ReservationStatus.VACANT)
     date_from: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), comment="Дата от", nullable=False
     )

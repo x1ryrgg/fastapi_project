@@ -20,3 +20,7 @@ class BankAccountResponse(BaseModel):
     created_at: datetime
 
     payments: List[PaymentResponse] = Field(default_factory=list)
+
+
+class TopUpRequest(BaseModel):
+    amount: Decimal = Field(gt=0, description="Сумма пополнения должна быть больше 0")
