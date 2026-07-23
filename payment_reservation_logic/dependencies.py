@@ -41,12 +41,16 @@ async def get_bank_account_by_user_id(user_id: int, db: AsyncSession,
     return bank_account
 
 
-async def get_payment_by_id(payment_id: int, db: AsyncSession,
+async def get_payment_by_id(payment_id: int, account_id: int,
+                            db: AsyncSession,
                             load_relationships: bool = False,
                             payment_status: PaymentStatus = PaymentStatus.PAID) -> Payment:
     """ Получение BankAccount по user_id """
     stmt = select(Payment).where(
-        (Payment.id == payment_id) & (Payment.status == payment_status))
+        (Payment.id == payment_id) &
+        (Payment.account_id == account_id) &
+        (Payment.status == payment_status)
+    )
 
     if load_relationships:
         stmt = stmt.options(

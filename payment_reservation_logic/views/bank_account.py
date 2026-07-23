@@ -9,7 +9,10 @@ from hotel_logic.dependencies import get_hotel_by_id, get_room_by_id, check_mana
 from payment_reservation_logic.schemas.bank_account import *
 from payment_reservation_logic.crud.bank_account import *
 from payment_reservation_logic.dependencies import *
-
+from payment_reservation_logic.service import (
+    AccountReplenishment,
+    EmailReplenishmentService,
+)
 
 router = APIRouter(
     prefix='/bank_account',
@@ -34,7 +37,10 @@ async def top_up_bank_account(
     db: AsyncSession = Depends(get_db)
 ):
     """ Пополнение счета через генерацию и проведение платежа """
-    return await process_top_up(user=user, amount=dto.amount, db=db)
+    account_replenishment_service: AccountReplenishment = EmailReplenishmentService(user=user,
+                                                                                    db=db,
+                                                                                    email_service=email_service)
+    return await account_replenishment_service.process_top_up(amount=dto.amount)
 
 
 @router.post("/confirm-top-up/", response_model=BankAccountConfirmTopUpResponse, status_code=status.HTTP_200_OK)
@@ -42,4 +48,7 @@ async def confirm_top_up_bank_account(dto: ConfirmTopUpRequest,
                                       user: User = Depends(RoleChecker()),
                                       db: AsyncSession = Depends(get_db)):
     """ Подтверждение пополнения счета вводом кода из Email """
-    return await confirm_top_up(user=user, payment_id=dto.payment_id, code=dto.code, db=db)
+    account_replenishment_service: AccountReplenishment = EmailReplenishmentService(
+        user=user, db=db, email_service=email_service
+    )
+    return await account_replenishment_service.confirm_top_up(payment_id=dto.payment_id, code=dto.code)
