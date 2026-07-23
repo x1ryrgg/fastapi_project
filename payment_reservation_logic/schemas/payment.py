@@ -13,7 +13,7 @@ class PaymentResponse(BaseModel):
 
     id: int
     account_id: int
-    reservation_id: int
+    reservation_id: Optional[int] = None
     amount: Decimal
     status: PaymentStatus
     created_at: datetime

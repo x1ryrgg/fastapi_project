@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import String, Numeric, ForeignKey, Boolean, func, DateTime, Enum as SQLEnum
+from sqlalchemy import String, Numeric, ForeignKey, Boolean, func, DateTime, Enum as SQLEnum, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.models.base import Base
 
@@ -52,7 +52,9 @@ class Payment(Base):
         ForeignKey("bank_accounts.id", ondelete="RESTRICT"), nullable=False
     )
     reservation_id: Mapped[int] = mapped_column(
-        ForeignKey("reservations.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey("reservations.id", ondelete="CASCADE"),
+        nullable=True, unique=True,
+        comment="ID бронирования (NULL если это пополнение счета)"
     )
 
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, comment="Сумма")
@@ -66,3 +68,34 @@ class Payment(Base):
 
     account: Mapped["BankAccount"] = relationship("BankAccount", uselist=False, back_populates="payments")
     reservation: Mapped["Reservation"] = relationship("Reservation", uselist=False, back_populates="payment")
+
+
+class VerificationCode(Base):
+    __tablename__ = "code_verifications"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        comment="Внешний ключ к пользователю",
+    )
+    code: Mapped[str] = mapped_column(
+        String(6), nullable=False, comment="Код"
+    )
+    is_active: Mapped[bool] = mapped_column(
+        nullable=False, default=True, comment="Статус кода"
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, comment="Время окончания действия кода"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_onupdate=func.now(), server_default=func.now()
+    )
+
+    user: Mapped["User"] = relationship(
+        "User", back_populates="code_verifications"
+    )
+
+    __table_args__ = (Index("ix_user_code_active", "user_id", "code", "is_active"),)

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from random import choices
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 from sqlalchemy import Column, Integer, String, DateTime, CheckConstraint, Enum as SQLEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -14,6 +14,7 @@ from enum import Enum
 if TYPE_CHECKING:
     from .hotel import Hotel, UserHotel
     from .reservation import Reservation
+    from .payment import VerificationCode,BankAccount
 
 
 class UserRole(str, Enum):
@@ -44,11 +45,14 @@ class User(Base):
     )
 
     reservations: Mapped[list["Reservation"]] = relationship(
-        "Reservation", uselist=True, back_populates="user", cascade="all, delete-orphan"
+        "Reservation", back_populates="user", cascade="all, delete-orphan"
     )
 
-    bank_account: Mapped[Optional["User"]] = relationship(
+    bank_account: Mapped[Optional["BankAccount"]] = relationship(
         "BankAccount", uselist=False, back_populates="user"
+    )
+    code_verifications: Mapped[List["VerificationCode"]] = relationship(
+        "VerificationCode", back_populates="user", cascade="all, delete-orphan"
     )
 
     UNIQUE_FIELDS = ["username", "email"]
@@ -57,4 +61,4 @@ class User(Base):
         return f"[{self.__class__.__name__} table] - {self.username} | {self.email}"
 
     def __repr__(self):
-        return self
+        return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"
