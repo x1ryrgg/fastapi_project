@@ -17,3 +17,12 @@ class PaymentResponse(BaseModel):
     amount: Decimal
     status: PaymentStatus
     created_at: datetime
+
+
+class PaymentForReservationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    amount: Decimal
+    status: PaymentStatus
+    created_at: datetime

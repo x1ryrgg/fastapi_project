@@ -46,15 +46,20 @@ async def get_room_information_by_id(room_info_id: int, db: AsyncSession = Depen
     return room_info
 
 
-async def get_room_by_id(room_id: int, db: AsyncSession = Depends(get_db), load_relationships: bool = False) -> Room:
+async def get_room_by_id(room_id: int, db: AsyncSession = Depends(get_db),
+                         load_relationships: bool = False,
+                         block_update_column: bool = False) -> Room:
     """ Получение Room по id """
     stmt = select(Room).where(Room.id == room_id)
 
     if load_relationships:
         stmt = stmt.options(
-            joinedload(Room.hotel).selectinload(Hotel.users_link),
-            joinedload(Room.room_information)
+            selectinload(Room.hotel).selectinload(Hotel.users_link),
+            selectinload(Room.room_information),
         )
+
+    if block_update_column:
+        stmt = stmt.with_for_update()
 
     result: Result = await db.execute(stmt)
     room = result.scalar_one_or_none()
@@ -86,4 +91,3 @@ def check_manager_permissions(hotel: Hotel, user: User) -> bool:
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
     return True
-

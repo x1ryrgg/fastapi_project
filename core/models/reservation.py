@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import datetime, date
+from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 from enum import Enum
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from sqlalchemy.sql.schema import Column, ForeignKey
+from sqlalchemy import Index, Numeric
 from sqlalchemy.sql.sqltypes import Integer, DateTime, String
 from core.mixins import UserRelationMixin
 from core.models.base import Base
@@ -12,6 +14,13 @@ if TYPE_CHECKING:
     from .hotel import Room
     from .payment import Payment
     from .user import User
+
+
+class ReservationStatus(str, Enum):
+    PENDING = "pending"        # Ожидает подтверждения/оплаты
+    CONFIRMED = "confirmed"    # Оплачено и подтверждено (номер забронирован)
+    CANCELLED = "cancelled"    # Отменено (пользователем или по таймауту)
+    COMPLETED = "completed"    # Завершено
 
 
 class Reservation(Base):
@@ -23,10 +32,14 @@ class Reservation(Base):
     room_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("rooms.id"), comment="Внешний ключ к номеру", nullable=False
     )
-    date_from: Mapped[datetime] = mapped_column(
+    total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, comment="Сумма")
+    status: Mapped[ReservationStatus] = mapped_column(
+        String(20), nullable=False, default=ReservationStatus.PENDING, comment="Статус бронирования"
+    )
+    date_from: Mapped[date] = mapped_column(
         DateTime(timezone=True), comment="Дата от", nullable=False
     )
-    date_to: Mapped[datetime] = mapped_column(
+    date_to: Mapped[date] = mapped_column(
         DateTime(timezone=True), comment="Дата до", nullable=True
     )
 
@@ -42,4 +55,8 @@ class Reservation(Base):
         "User",
         uselist=False,
         back_populates="reservations",
+    )
+
+    __table_args__ = (
+        Index("idx_reservation_room_dates", "room_id", "date_from", "date_to"),
     )

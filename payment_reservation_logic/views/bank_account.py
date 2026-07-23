@@ -30,7 +30,7 @@ async def get_bank_account(user: User = Depends(RoleChecker()), db: AsyncSession
     return await get_bank_account_by_user_id(user_id=user.id, db=db, load_relationships=True)
 
 
-@router.post("/top-up/", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/top-up", response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
 async def top_up_bank_account(
     dto: TopUpRequest,
     user: User = Depends(RoleChecker()),
@@ -39,16 +39,16 @@ async def top_up_bank_account(
     """ Пополнение счета через генерацию и проведение платежа """
     account_replenishment_service: AccountReplenishment = EmailReplenishmentService(user=user,
                                                                                     db=db,
-                                                                                    email_service=email_service)
+                                                                                    code_sender=email_service)
     return await account_replenishment_service.process_top_up(amount=dto.amount)
 
 
-@router.post("/confirm-top-up/", response_model=BankAccountConfirmTopUpResponse, status_code=status.HTTP_200_OK)
+@router.post("/confirm-top-up", response_model=BankAccountConfirmTopUpResponse, status_code=status.HTTP_200_OK)
 async def confirm_top_up_bank_account(dto: ConfirmTopUpRequest,
                                       user: User = Depends(RoleChecker()),
                                       db: AsyncSession = Depends(get_db)):
     """ Подтверждение пополнения счета вводом кода из Email """
     account_replenishment_service: AccountReplenishment = EmailReplenishmentService(
-        user=user, db=db, email_service=email_service
+        user=user, db=db
     )
-    return await account_replenishment_service.confirm_top_up(payment_id=dto.payment_id, code=dto.code)
+    return await account_replenishment_service.confirm_top_up(payment_id=dto.payment_id, code=dto.code, )

@@ -84,7 +84,7 @@ class Hotel(Base):
     __table_args__ = (CheckConstraint("stars <= 5", name="stars_max_count"),)
 
 
-class ReservationStatus(str, Enum):
+class HotelBookStatus(str, Enum):
     VACANT = "vacant"
     OCCUPIED = "occupied"
 
@@ -96,13 +96,13 @@ class Room(Base):
         comment="Внешний ключ к отелю",
         nullable=False,
     )
-    info_id: Mapped[Optional[int]] = mapped_column(
+    info_id: Mapped[int] = mapped_column(
         ForeignKey("room_information.id", ondelete="SET NULL"),
+        nullable=False,
         comment="Внешний ключ к информации о номере",
-        nullable=True,
     )
-    status: Mapped[ReservationStatus] = mapped_column(
-        String(20), nullable=False, default=ReservationStatus.VACANT
+    status: Mapped[HotelBookStatus] = mapped_column(
+        String(20), nullable=False, default=HotelBookStatus.VACANT
     )
     floor: Mapped[int] = mapped_column(Integer, comment="Этаж", nullable=False)
     number: Mapped[int] = mapped_column(Integer, comment="Порядковое значение номера", nullable=False)
@@ -118,7 +118,7 @@ class Room(Base):
     hotel: Mapped["Hotel"] = relationship(
         "Hotel", back_populates="rooms", uselist=False
     )
-    room_information: Mapped[Optional["RoomInformation"]] = relationship(
+    room_information: Mapped["RoomInformation"] = relationship(
         "RoomInformation", back_populates="room", uselist=False
     )
     reservations: Mapped[List["Reservation"]] = relationship(
@@ -139,9 +139,9 @@ class RoomType(str, Enum):
 class RoomInformation(Base):
     __tablename__ = "room_information"
 
-    price_per_night: Mapped[Decimal] = mapped_column(Numeric(10, 2),
-                                                     comment="Цена за сутки",
-                                                     nullable=False)
+    price_per_night: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2), default=1, nullable=False, comment="Цена за сутки"
+    )
     capacity: Mapped[int] = mapped_column(Integer, comment="Вместимость клиентов", nullable=False, default=1)
     size: Mapped[float] = mapped_column(Float, comment="Размер в м^2", nullable=False, default=15)
     type: Mapped[RoomType] = mapped_column(String(20), comment="Тип номера", nullable=False, default=RoomType.SINGLE)

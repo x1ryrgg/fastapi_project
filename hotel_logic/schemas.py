@@ -96,5 +96,28 @@ class RoomResponse(BaseModel):
     updated_at: datetime
 
     hotel: HotelResponse
-    room_information: Optional[RoomInformationResponse] = None
+    room_information: RoomInformationResponse
+
+
+class HotelForReservationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    city: str
+    address: str
+    region: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
+
+class RoomForReservationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    floor: int
+    number: int
+
+    hotel: HotelForReservationResponse
+    room_information: RoomInformationResponse
 
