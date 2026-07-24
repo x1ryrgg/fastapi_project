@@ -41,9 +41,17 @@ async def get_user_reservation(reservation_id: int,
 async def book_hotel_room(dto: CreateReservationRequest,
                           user: User = Depends(RoleChecker()),
                           db: AsyncSession = Depends(get_db)):
-    booking_service = BookingService(user=user, db=db, code_sender=email_service)
-    return await booking_service.book_room(
+    booking_service = BookingService(user=user, db=db)
+    reservation = await booking_service.book_room(
         room_id=dto.room_id,
         date_from=dto.date_from,
         date_to=dto.date_to,
     )
+
+    await cache.delete(f"reservations:user:{user.id}")
+
+    await email_service.send_text_email(
+        to_email=user.email, text="Оплата номера отеля успешна."
+    )
+
+    return reservation

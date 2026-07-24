@@ -3,12 +3,12 @@ import secrets
 from abc import ABC, abstractmethod
 from decimal import Decimal
 
-from sqlalchemy import select, Result
+from sqlalchemy import select, Result, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 
-from core.email_service import EmailService
+from core.email_service import EmailService, email_service
 from core.models.hotel import HotelBookStatus
 from core.models.reservation import Reservation, ReservationStatus
 from core.models.user import User
@@ -42,11 +42,11 @@ class AccountReplenishment(ABC):
         pass
 
 
-class EmailReplenishmentService(AccountReplenishment):
+class DefaultReplenishmentService(AccountReplenishment):
     """ """
     def __init__(self, user: User,
                  db: AsyncSession,
-                 code_sender: EmailService = None):
+                 code_sender: EmailService):
         self.user = user
         self.db = db
         self.code_sender = code_sender
@@ -65,6 +65,15 @@ class EmailReplenishmentService(AccountReplenishment):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Аккаунт платежного сервиса заблокирован.",
             )
+        # Все предыдущие коды пользователя блокируем
+        await self.db.execute(
+            update(VerificationCode)
+            .where(
+                VerificationCode.user_id == self.user.id,
+                VerificationCode.is_active == True,
+            )
+            .values(is_active=False)
+        )
 
         new_payment = Payment(
             account_id=bank_account.id, amount=amount, status=PaymentStatus.PENDING
@@ -139,10 +148,9 @@ class EmailReplenishmentService(AccountReplenishment):
 
 class BookingService:
     """ """
-    def __init__(self, user: User, db: AsyncSession, code_sender: EmailService):
+    def __init__(self, user: User, db: AsyncSession):
         self.user = user
         self.db = db
-        self.code_sender = code_sender
 
     async def book_room(self, room_id: int, date_from: date, date_to: date) -> Reservation:
         room = await get_room_by_id(room_id=room_id, db=self.db, load_relationships=True, block_update_column=True)
@@ -205,9 +213,4 @@ class BookingService:
         # Коммитим всю транзакцию атомарно
         await self.db.commit()
         await self.db.refresh(reservation)
-
-        await cache.delete(f"reservations:user:{self.user.id}")
-
-        await self.code_sender.send_text_email(to_email=self.user.email, text='Оплата номера отеля успешна.')
-
         return reservation
