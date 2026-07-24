@@ -1,20 +1,29 @@
 import jwt
-
-from passlib.context import CryptContext
+import bcrypt
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from core.config import security_settings as settings
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def hash_password(password: str) -> str:
     """Хеширование пароля."""
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode("utf-8")[:72]
+
+    # Генерируем соль и получаем хеш
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+
+    # Возвращаем строковое представление хеша для сохранения в БД
+    return hashed.decode("utf-8")
 
 def verify_password(password: str, hashed_password: str) -> bool:
     """Проверка пароля."""
-    return pwd_context.verify(password, hashed_password)
+    try:
+        pwd_bytes = password.encode("utf-8")[:72]
+        hash_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(pwd_bytes, hash_bytes)
+    except Exception:
+        return False
 
 # ===== JWT =====
 def create_access_token(data: dict) -> str:
