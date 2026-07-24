@@ -12,6 +12,7 @@ from core.models import Reservation
 from core.models.user import User, UserRole
 from core.models.payment import BankAccount, Payment, PaymentStatus
 from core.models.hotel import Hotel, Room, RoomInformation
+from cashews import cache
 
 
 async def get_bank_account_by_user_id(user_id: int, db: AsyncSession,
@@ -75,6 +76,7 @@ async def get_payment_by_id(payment_id: int, account_id: int,
     return payment
 
 
+@cache(ttl=5*60, key="reservation:detail:{reservation_id}")
 async def get_user_reservation_by_id(reservation_id: int, user_id: int,
                                 db: AsyncSession,
                                 load_relationships: bool = False,

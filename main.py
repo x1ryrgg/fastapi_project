@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi import Request, status, HTTPException
+from cashews import cache
 
 from core.logging_system import logger
 from users_logic.views.user import router as user_router
@@ -13,16 +14,21 @@ from hotel_logic.views.room_information import router as room_information
 from payment_reservation_logic.views.payment import router as payment_router
 from payment_reservation_logic.views.reservation import router as reservation_router
 from payment_reservation_logic.views.bank_account import router as bank_account_router
+from core.config import settings
 
 
 # uvicorn main:app --reload - запуск приложение на uvicron
 # netstat -ano | findstr :8000 - нахождение активных процессов
 # taskkill /PID 7348 /F - завершение активных процессов
-
+# docker exec -it redis-container redis-cli - запуск redis-cli
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    cache.setup(settings.redis_url)
+
     yield
+
+    await cache.close()
 
 app = FastAPI(lifespan=lifespan, title='TEST FASTAPI')
 

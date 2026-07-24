@@ -19,6 +19,7 @@ from payment_reservation_logic.crud.reservation import (
     calculate_price_booking_range,
 )
 from payment_reservation_logic.dependencies import get_bank_account_by_user_id, get_payment_by_id
+from cashews import cache
 
 
 class AccountReplenishment(ABC):
@@ -204,6 +205,8 @@ class BookingService:
         # Коммитим всю транзакцию атомарно
         await self.db.commit()
         await self.db.refresh(reservation)
+
+        await cache.delete(f"reservations:user:{self.user.id}")
 
         await self.code_sender.send_text_email(to_email=self.user.email, text='Оплата номера отеля успешна.')
 

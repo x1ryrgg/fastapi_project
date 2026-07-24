@@ -13,8 +13,10 @@ from core.models.user import User
 from core.models.hotel import Hotel, Room
 from core.models.reservation import Reservation, ReservationStatus
 from sqlalchemy.ext.asyncio import AsyncSession
+from cashews import cache
 
 
+@cache(ttl=60*10, key="reservations:user:{user.id}")
 async def get_user_reservations(user: User, db: AsyncSession):
     """ Возрат Reservation по User"""
     stmt: Result = await db.execute(

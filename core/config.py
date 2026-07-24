@@ -11,12 +11,18 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
+    # DataBase
     DB_URL: str = os.getenv("DATABASE_URL", "")
+    # Mail SMTP
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
     MAIL_FROM: str
     MAIL_PORT: int = 465
     MAIL_SERVER: str
+    # Redis cache
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
 
     @field_validator('DB_URL')
     @classmethod
@@ -26,6 +32,10 @@ class Settings(BaseSettings):
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
         return v
+
+    @property
+    def redis_url(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     class Config:
         env_file = ".env"
