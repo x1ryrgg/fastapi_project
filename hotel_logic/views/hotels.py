@@ -29,7 +29,7 @@ async def create_hotel(
 
 @router.get("/", response_model=List[HotelResponse], status_code=status.HTTP_200_OK)
 async def get_all_hotels(db: AsyncSession = Depends(get_db)):
-    """View получения всех отелей """
+    """View получения всех отелей  """
     return await hotel_crud.get_all_hotels(db=db)
 
 
